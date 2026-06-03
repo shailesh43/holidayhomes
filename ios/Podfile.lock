@@ -1,0 +1,54 @@
+PODS:
+  - Alamofire (5.9.1)
+  - AppAuth (1.7.5):
+    - AppAuth/Core (= 1.7.5)
+    - AppAuth/ExternalUserAgent (= 1.7.5)
+  - AppAuth/Core (1.7.5)
+  - AppAuth/ExternalUserAgent (1.7.5):
+    - AppAuth/Core
+  - CryptoSwift (1.10.0)
+  - device_info_plus (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_appauth (0.0.1):
+    - AppAuth (= 1.7.5)
+    - Flutter
+  - http_certificate_pinning (3.0.0):
+    - Alamofire (~> 5.9.0)
+    - CryptoSwift
+    - Flutter
+
+DEPENDENCIES:
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_appauth (from `.symlinks/plugins/flutter_appauth/ios`)
+  - http_certificate_pinning (from `.symlinks/plugins/http_certificate_pinning/ios`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - Alamofire
+    - AppAuth
+    - CryptoSwift
+
+EXTERNAL SOURCES:
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  Flutter:
+    :path: Flutter
+  flutter_appauth:
+    :path: ".symlinks/plugins/flutter_appauth/ios"
+  http_certificate_pinning:
+    :path: ".symlinks/plugins/http_certificate_pinning/ios"
+
+SPEC CHECKSUMS:
+  Alamofire: f36a35757af4587d8e4f4bfa223ad10be2422b8c
+  AppAuth: 501c04eda8a8d11f179dbe8637b7a91bb7e5d2fa
+  CryptoSwift: e2e7776512f250e66205955da748e7a4e4abffe0
+  device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_appauth: 273bf736e38f7d85000b1a9ac15ace5800c277f2
+  http_certificate_pinning: 133f28ad5c2d1ecda2581dd2d2cd9dc74da59012
+
+PODFILE CHECKSUM: 73ba595134bf35f04779d32488f5d0b24296f5a3
+
+COCOAPODS: 1.16.2
