@@ -7,9 +7,9 @@ class ApiConstants {
   // static String baseURl = "http://localhost:3010/api/";
 
   // BASEURL of Holiday Homes Production backend
-  static String baseURl = "https://bizapps.tatapower.com/api/greengears/carmanagement/api/";
+  static String baseURl = "https://bizapps.tatapower.com/holiday-homes/";
   static String serverURL = "https://bizapps.tatapower.com";
-  static String get SHAFingerprint => dotenv.env['SHA_FINGERPRINT'] ?? '';
+  static String get shaFingerPrint => dotenv.env['SHA_FINGERPRINT'] ?? '';
 
   // MS-SAMAL auth credentials & URL params
   static String get tenantId => dotenv.env['TENANT_ID'] ?? '';
@@ -32,7 +32,7 @@ class ApiConstants {
   static const String roleByEmployee = 'role-by-employee';
 
   // getX function for getting the "API endpoint url"
-  static getEndPointUrl(String endPointName) async {
+  static Future<String> getEndPointUrl(String endPointName) async {
     String endPointUrl = "";
     switch (endPointName) {
       case "roleByEmployee":

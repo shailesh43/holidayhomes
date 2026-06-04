@@ -35,14 +35,14 @@ class _InitResult {
         loginResult = _LoginResult.success;
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class App extends StatefulWidget {
+  const App({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<App> createState() => _AppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _AppState extends State<App> {
   final ApiClient _client = globalApiClient;
   late Future<_InitResult> _initFuture;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<_InitResult> _initializeApp() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     if (Platform.isAndroid) {
       // final isRoot = await androidRootChecker();
@@ -73,7 +73,7 @@ class _MyAppState extends State<MyApp> {
       bool hasRogueCA = false;
       if (!kDebugMode) {
         try {
-          hasRogueCA = await const MethodChannel('com.tatapower.greengears/security')
+          hasRogueCA = await const MethodChannel('com.tatapower.holidayhomes/security')
               .invokeMethod('hasUserInstalledCACerts');
         } on PlatformException {
           hasRogueCA = true; // fail safe
@@ -269,7 +269,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'GreenGears',
+      title: 'Holiday Homes',
       // ─── FIX 6: wire up navigatorKey so showErrorDialog can find a context ───
       navigatorKey: _navigatorKey,
       theme: ThemeData(
@@ -452,13 +452,13 @@ class _SplashScreenState extends State<SplashScreen>
               ),
               const SizedBox(height: 32),
               const Text(
-                'GreenGears',
+                'Holiday Homes',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 30,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.8,
-                  color: Color.fromRGBO(15, 111, 16, 1.0),
+                  color: Color.fromRGBO(50, 50, 50, 0.9607843137254902),
                 ),
               ),
             ],
@@ -466,9 +466,9 @@ class _SplashScreenState extends State<SplashScreen>
           const SizedBox(height: 42),
           SizedBox(
             width: double.infinity,
-            height: 200,
+            height: 100,
             child: Lottie.asset(
-              'assets/images/moving_car_lottie.json',
+              'assets/images/house_animation.json',
               fit: BoxFit.cover,
               repeat: true,
             ),
