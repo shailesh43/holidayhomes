@@ -1,45 +1,26 @@
+pluginManagement {
+    val flutterSdkPath =
+        run {
+            val properties = java.util.Properties()
+            file("local.properties").inputStream().use { properties.load(it) }
+            val flutterSdkPath = properties.getProperty("flutter.sdk")
+            require(flutterSdkPath != null) { "flutter.sdk not set in local.properties" }
+            flutterSdkPath
+        }
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    id("dev.flutter.flutter-gradle-plugin")
+    id("dev.flutter.flutter-plugin-loader") version "1.0.0"
+    id("com.android.application") version "8.11.1" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
 
-android {
-    namespace = "com.tatapower.greengears"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17" // Correct Kotlin DSL syntax
-    }
-
-    defaultConfig {
-        // TODO: Specify your own unique Application ID
-        applicationId = "com.tatapower.holidayhomes"
-        minSdk = 29
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-        manifestPlaceholders["appAuthRedirectScheme"] = "msauth"
-    }
-
-    buildTypes {
-        release {
-            // Signing with debug keys for now
-            signingConfig = signingConfigs.getByName("debug")
-        }
-        debug {
-            // Optional: ensure debug build also has placeholder
-            manifestPlaceholders["appAuthRedirectScheme"] = "msauth"
-        }
-    }
-}
-
-flutter {
-    source = "../.."
-}
+include(":app")
