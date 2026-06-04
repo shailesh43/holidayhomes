@@ -1,11 +1,9 @@
+# Source for "pod install"
 source 'https://github.com/CocoaPods/Specs.git'
-
 # Define global platform
 platform :ios, '13.0'
-
 # Disable CocoaPods analytics (improves build speed)
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
-
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -47,16 +45,6 @@ target 'Runner' do
   end
 end
 
-# target 'Runner' do
-#   use_frameworks!
-#   use_modular_headers!
-#
-#   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-#
-#   target 'RunnerTests' do
-#     inherit! :search_paths
-#   end
-# end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
