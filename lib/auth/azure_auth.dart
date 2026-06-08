@@ -5,39 +5,11 @@ import 'package:http/io_client.dart';
 import 'package:flutter_appauth/flutter_appauth.dart';
 
 import '../core/constants/api_constants.dart';
-import '../core/constants/local_prefs.dart';
 import './token.dart';
 import 'dart:io'; // For SocketException
 import 'dart:async'; // For TimeoutException
 import 'dart:convert'; // For jsonDecode
-import 'dart:math';
-import 'package:crypto/crypto.dart'; // add crypto: ^3.0.3 to pubspec.yaml if not present
 import '../core/helpers/ssl_pinning.dart';
-
-// // ---------------------------------------------------------------------------
-// // PKCE helpers (RFC 7636)
-// // ---------------------------------------------------------------------------
-// String _generateCodeVerifier() {
-//   final random = Random.secure();
-//   final bytes = Uint8List(32);
-//   for (var i = 0; i < bytes.length; i++) {
-//     bytes[i] = random.nextInt(256);
-//   }
-//   return base64UrlEncode(bytes).replaceAll('=', '');
-// }
-//
-// String _generateCodeChallenge(String verifier) {
-//   final bytes = utf8.encode(verifier);
-//   final digest = sha256.convert(bytes);
-//   return base64UrlEncode(digest.bytes).replaceAll('=', '');
-// }
-// // ---------------------------------------------------------------------------
-//
-// // A standard (non-pinned) client that still uses system trusted roots.
-// // Used ONLY for Microsoft endpoints (login.microsoftonline.com, graph.microsoft.com)
-// // which cannot be pinned since Microsoft rotates their certificates.
-// // This is intentional and safe — Microsoft's certs are validated against
-// // the OS trust store, not user-installed CAs.
 
 http.Client _buildMicrosoftClient() {
   final httpClient = HttpClient()
