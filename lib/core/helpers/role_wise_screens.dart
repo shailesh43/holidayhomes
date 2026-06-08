@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../features/test_screen.dart';
-import '../../features/const_test_screen.dart';
+import 'package:holidayhomes/features/bookings/bookings_page.dart';
+import 'package:holidayhomes/features/home/home_page.dart';
+import 'package:holidayhomes/features/policy/policy_page.dart';
+import '../../features/bookings/bookings_page.dart';
+import '../../features/home/home_page.dart';
+import '../../features/policy/policy_page.dart';
 
 import '../../core/utils/enum.dart';
 import '../constants/local_prefs.dart';
@@ -56,69 +60,54 @@ class _RoleWiseScreensState extends State<RoleWiseScreens> {
 
   void _setupPagesAndNav() {
 
-    const _fourTabNav = [
+    const threeTabNav = [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Processing'),
-      BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: 'Bookings'),
       BottomNavigationBarItem(icon: Icon(Icons.policy), label: 'Policy'),
     ];
 
-    const _threeTabNav = [
+    const twoTabNav = [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       BottomNavigationBarItem(icon: Icon(Icons.policy), label: 'Policy'),
     ];
 
-
-    switch (role) {
+    switch (role)
+    {
       case UserRole.admin:
         _pages = [
-          TestScreen(role: role),
-          TestScreen(role: role),
-          const ConstTestScreen(),
-          const ConstTestScreen(),
-        ];
-        break;
-
-      case UserRole.esna:
-        _pages = [
-          TestScreen(role: role),
-          TestScreen(role: role),
-          const ConstTestScreen(),
-          const ConstTestScreen(),
-        ];
-        break;
-
-      case UserRole.insurance:
-        _pages = [
-          TestScreen(role: role),
-          TestScreen(role: role),
-          const ConstTestScreen(),
-          const ConstTestScreen(),
-        ];
-        break;
-
-      case UserRole.centralAdmin:
-        _pages = [
-          TestScreen(role: role),
-          TestScreen(role: role),
-          const ConstTestScreen(),
-          const ConstTestScreen(),
+          HomePage(role: role), // Home
+          BookingsPage(role: role), // Bookings
+          const PolicyPage(), // Policy
         ];
         break;
 
       case UserRole.user:
         _pages = [
-          TestScreen(role: role),
-          const ConstTestScreen(),
-          const ConstTestScreen(),
+          HomePage(role: role), // Home
+          const PolicyPage(), // policy
+        ];
+        break;
+
+      case UserRole.facilitator:
+        _pages = [
+          HomePage(role: role), // Home
+          BookingsPage(role: role), // Bookings
+          const PolicyPage(), // Policy
+        ];
+        break;
+
+      case UserRole.report:
+        _pages = [
+          HomePage(role: role), // Home
+          BookingsPage(role: role), // Bookings
+          const PolicyPage(), // Policy
         ];
         break;
     }
 
-    _navItems = _pages.length == 4
-        ?  _fourTabNav
-        : _threeTabNav;
+    _navItems = _pages.length == 3
+        ?  threeTabNav
+        : twoTabNav;
   }
 
   @override
@@ -127,7 +116,7 @@ class _RoleWiseScreensState extends State<RoleWiseScreens> {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(
-            color: Color.fromRGBO(34, 197, 94, 1), // Your green color
+            color: Color.fromRGBO(34, 116, 197, 1.0), // Your green color
           ),
         ),
       );
