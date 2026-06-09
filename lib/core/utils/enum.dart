@@ -2,10 +2,10 @@ import 'package:collection/collection.dart';
 
 // USER ROLES
 enum UserRole {
-  user(1, 'User'),
-  admin(2, 'Admin'),
-  facilitator(3, 'Facilitator'),
-  report(4, 'Report');
+  admin(1, 'Admin'),
+  facilitator(2, 'Facilitator'),
+  report(3, 'Report'),
+  caretaker(4, 'Caretaker');
 
   final int id;
   final String label;

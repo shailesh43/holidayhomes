@@ -1,12 +1,11 @@
-import 'dart:async';
 import 'dart:core';
-import 'dart:ui';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
-// import 'core/dashboard_shell.dart';
+import 'package:jailbreak_root_detection/jailbreak_root_detection.dart';
+
 import './auth/azure_auth.dart';
 import './core/constants/local_prefs.dart';
 import './network/api_client.dart';
@@ -14,7 +13,6 @@ import './core/utils/enum.dart';
 import './core/helpers/role_wise_screens.dart';
 import './core/helpers/emulator_detector.dart';
 import './main.dart';
-// import 'package:jailbreak_root_detection/jailbreak_root_detection.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
@@ -64,26 +62,36 @@ class _AppState extends State<App> {
   }
 
   Future<_InitResult> _initializeApp() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future.delayed(const Duration(seconds: 2));
 
     if (Platform.isAndroid) {
-      // final isRoot = await androidRootChecker();
+      final isRoot = await androidRootChecker();
+      final isDeveloperMode = await developerMode();
       final isEmulatorDevice = await isEmulator();
+      final hasSuspiciousStorage = await suspiciousStorageCheck();
 
       bool hasRogueCA = false;
       if (!kDebugMode) {
         try {
-          hasRogueCA = await const MethodChannel('com.tatapower.holidayhomes/security')
+          hasRogueCA = await const MethodChannel('com.tatapower.greengears/security')
               .invokeMethod('hasUserInstalledCACerts');
         } on PlatformException {
           hasRogueCA = true; // fail safe
         }
       }
 
-      if (!isEmulatorDevice && !hasRogueCA) {
+      if (!isRoot && !isDeveloperMode && !isEmulatorDevice && !hasRogueCA) {
         return await moveToNext();
       } else {
-        if (isEmulatorDevice) {
+        if (isRoot) {
+          showErrorDialog('You cannot use the Tata Power GreenGears app on a jailbroken or rooted device.');
+        } else if (isDeveloperMode) {
+          showErrorDialog(
+            'Developer Mode is enabled, preventing you from using the app. '
+                'To disable it, go to Settings > search for Developer > select '
+                'Developer options > toggle it Off, then restart the app.',
+          );
+        } else if (isEmulatorDevice) {
           showErrorDialog('The Tata Power GreenGears app cannot run on an emulator. Please install the app on a physical device.');
         } else if (hasRogueCA) {
           showErrorDialog(
@@ -93,12 +101,15 @@ class _AppState extends State<App> {
       }
     } else if (Platform.isIOS) {
       // iOS block unchanged
+      final isIosJailbreak = await iosJailbreak();
       final isEmulatorDevice = await isEmulator();
 
-      if (!isEmulatorDevice) {
+      if (!isIosJailbreak && !isEmulatorDevice) {
         return await moveToNext();
       } else {
-        if (isEmulatorDevice) {
+        if (isIosJailbreak) {
+          showErrorDialog('You cannot use the Tata Power GreenGears app on a jailbroken or rooted device.');
+        } else if (isEmulatorDevice) {
           showErrorDialog('The Tata Power GreenGears app cannot run on an emulator. Please install the app on a physical device.');
         }
         return const _InitResult.emulatorBlocked();
@@ -107,7 +118,6 @@ class _AppState extends State<App> {
     return await moveToNext();
   }
 
-  // ─── FIX 3: was missing `async`, used `await` without it, and returned void ───
   Future<_InitResult> moveToNext() async {
     final storedEmpId = await LocalPrefs.getEmpCode();
     if (storedEmpId != null && storedEmpId.isNotEmpty) {
@@ -116,14 +126,14 @@ class _AppState extends State<App> {
     return _login();
   }
 
-  // Future<bool> androidRootChecker() async {
-  //   if (kDebugMode) return false;
-  //   try {
-  //     return await JailbreakRootDetection.instance.isJailBroken;
-  //   } on PlatformException {
-  //     return false;
-  //   }
-  // }
+  Future<bool> androidRootChecker() async {
+    if (kDebugMode) return false;
+    try {
+      return await JailbreakRootDetection.instance.isJailBroken;
+    } on PlatformException {
+      return false;
+    }
+  }
 
   Future<bool> isEmulator() async {
     if (kDebugMode) return false;
@@ -135,35 +145,34 @@ class _AppState extends State<App> {
     }
   }
 
-  // Future<bool> suspiciousStorageCheck() async {
-  //   try {
-  //     return !(await JailbreakRootDetection.instance.isOnExternalStorage);
-  //   } catch (e) {
-  //     return false;
-  //   }
-  // }
+  Future<bool> suspiciousStorageCheck() async {
+    try {
+      return !(await JailbreakRootDetection.instance.isOnExternalStorage);
+    } catch (e) {
+      return false;
+    }
+  }
 
-  // Future<bool> developerMode() async {
-  //   if (kDebugMode) return false;
-  //   try {
-  //     return await JailbreakRootDetection.instance.isDevMode;
-  //   } on PlatformException {
-  //     return false;
-  //   }
-  // }
+  Future<bool> developerMode() async {
+    if (kDebugMode) return false;
+    try {
+      return await JailbreakRootDetection.instance.isDevMode;
+    } on PlatformException {
+      return false;
+    }
+  }
 
-  // Future<bool> iosJailbreak() async {
-  //   if (kDebugMode) return false;
-  //   try {
-  //     const bundleId = 'com.tatapower.greengears';
-  //     return await JailbreakRootDetection.instance.isJailBroken ||
-  //         await JailbreakRootDetection.instance.isTampered(bundleId);
-  //   } on PlatformException {
-  //     return false;
-  //   }
-  // }
+  Future<bool> iosJailbreak() async {
+    if (kDebugMode) return false;
+    try {
+      const bundleId = 'com.tatapower.holidayhomes';
+      return await JailbreakRootDetection.instance.isJailBroken ||
+          await JailbreakRootDetection.instance.isTampered(bundleId);
+    } on PlatformException {
+      return false;
+    }
+  }
 
-  // ─── FIX 4: replaced Get.dialog (GetX) with a plain showDialog ───
   void showErrorDialog(String message) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _navigatorKey.currentContext;
@@ -239,7 +248,6 @@ class _AppState extends State<App> {
   Future<_InitResult> _login() async {
     final empId = await AuthenticationService.login(context);
     if (empId != null) {
-      // ─── FIX 5: was saveEmpId — corrected to saveEmpCode to match getEmpCode ───
       await LocalPrefs.saveEmpId(empCode: empId);
       await LocalPrefs.saveLoginStatus(isLoggedIn: true);
       print("✅ EMPID received - ${empId}, isLoggedIn = true");
@@ -250,18 +258,16 @@ class _AppState extends State<App> {
   }
 
   Future<UserRole> _fetchEmployeeRole(String empCode) async {
-    if (empCode.isEmpty) return UserRole.user;
+    if (empCode.isEmpty) return UserRole.caretaker;
     try {
-      // final result = await _client.getRoleByEmployee(empCode);
-      // final roleId = result.roleIds.isNotEmpty ? result.roleIds.first : 1;
-      // await LocalPrefs.saveRoleId(roleId: roleId);
-      return UserRole.fromId(2) ?? UserRole.user;
+      await LocalPrefs.saveRoleId(roleId: 2);
+      return UserRole.fromId(4) ?? UserRole.caretaker;
     } catch (e) {
       assert(() {
         debugPrint('Error fetching role: $e');
         return true;
       }());
-      return UserRole.user;
+      return UserRole.caretaker;
     }
   }
 
@@ -270,7 +276,6 @@ class _AppState extends State<App> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Holiday Homes',
-      // ─── FIX 6: wire up navigatorKey so showErrorDialog can find a context ───
       navigatorKey: _navigatorKey,
       theme: ThemeData(
         useMaterial3: true,
@@ -312,7 +317,7 @@ class _AppState extends State<App> {
                     ),
                   );
                 }
-                final role = roleSnapshot.data ?? UserRole.user;
+                final role = roleSnapshot.data ?? UserRole.caretaker;
                 return RoleWiseScreens(role: role);
               },
             );
@@ -458,7 +463,7 @@ class _SplashScreenState extends State<SplashScreen>
                   fontSize: 30,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.8,
-                  color: Color.fromRGBO(50, 50, 50, 0.9607843137254902),
+                  color: Color.fromRGBO(72, 72, 72, 0.9607843137254902),
                 ),
               ),
             ],

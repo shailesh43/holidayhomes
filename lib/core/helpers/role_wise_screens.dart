@@ -81,7 +81,7 @@ class _RoleWiseScreensState extends State<RoleWiseScreens> {
         ];
         break;
 
-      case UserRole.user:
+      case UserRole.caretaker:
         _pages = [
           HomePage(role: role), // Home
           const PolicyPage(), // policy

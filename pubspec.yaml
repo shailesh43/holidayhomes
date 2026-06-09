@@ -34,6 +34,7 @@ dependencies:
   http: ^1.2.0
   dio: ^5.9.1
   http_certificate_pinning: ^3.0.1
+  jailbreak_root_detection: ^1.2.0+1
 
   # System Storage
   shared_preferences: ^2.5.4
