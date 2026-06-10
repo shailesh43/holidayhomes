@@ -16,14 +16,6 @@ class ApiClient {
   static bool _isPinningVerified = false; // static so all instances share it
 
   final Logger logger = Logger();
-
-  final Dio _dio = Dio(
-    BaseOptions(
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-    ),
-  );
-
   // Called ONCE from main() before app loads
   Future<void> initSSLPinning() async {
     if (_isPinningVerified) return; // already done, skip
@@ -39,18 +31,11 @@ class ApiClient {
     securityContext.setTrustedCertificatesBytes(sslCert.buffer.asInt8List());
 
     final httpClient = HttpClient(context: securityContext);
-    // httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
-    //   return host == "bizapps.tatapower.com"; // only allow your domain
-    // };
+    httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      return host == "bizapps.tatapower.com"; // only allow your domain
+    };
 
     return IOClient(httpClient);
-  }
-
-  static http.Client get pinnedHttpClient {
-    if (!_isPinningVerified || _pinnedClient == null) {
-      throw Exception("SSL Pinning not initialized. Call initSSLPinning() first.");
-    }
-    return _pinnedClient!;
   }
   // Returns the pinned client — used by ALL request methods
   http.Client get _client {
@@ -58,7 +43,6 @@ class ApiClient {
     return _pinnedClient!;
   }
 
-  // Guard — throws if initSSLPinning() was never called
   void _assertPinningVerified() {
     if (!_isPinningVerified || _pinnedClient == null) {
       throw Exception("SSL Pinning not initialized. Call initSSLPinning() first.");
@@ -109,4 +93,6 @@ class ApiClient {
   }
 
   // ---------------- API ENDPOINTS ----------------
+
+
 }

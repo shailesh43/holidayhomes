@@ -73,7 +73,7 @@ class _AppState extends State<App> {
       bool hasRogueCA = false;
       if (!kDebugMode) {
         try {
-          hasRogueCA = await const MethodChannel('com.tatapower.greengears/security')
+          hasRogueCA = await const MethodChannel('com.tatapower.holidayhomes/security')
               .invokeMethod('hasUserInstalledCACerts');
         } on PlatformException {
           hasRogueCA = true; // fail safe
@@ -257,11 +257,12 @@ class _AppState extends State<App> {
     return const _InitResult.cancelled();
   }
 
+  // Call fetchRole api here
   Future<UserRole> _fetchEmployeeRole(String empCode) async {
     if (empCode.isEmpty) return UserRole.caretaker;
     try {
-      await LocalPrefs.saveRoleId(roleId: 2);
-      return UserRole.fromId(4) ?? UserRole.caretaker;
+      await LocalPrefs.saveRoleId(roleId: 1);
+      return UserRole.fromId(1) ?? UserRole.caretaker;
     } catch (e) {
       assert(() {
         debugPrint('Error fetching role: $e');
