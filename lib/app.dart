@@ -248,9 +248,8 @@ class _AppState extends State<App> {
   Future<_InitResult> _login() async {
     final empId = await AuthenticationService.login(context);
     if (empId != null) {
-      await LocalPrefs.saveEmpId(empCode: empId);
+      await LocalPrefs.saveEmpCode(empCode: empId);
       await LocalPrefs.saveLoginStatus(isLoggedIn: true);
-      print("✅ EMPID received - ${empId}, isLoggedIn = true");
       return _InitResult.success(empId);
     }
 
