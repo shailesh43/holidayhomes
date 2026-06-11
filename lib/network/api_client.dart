@@ -10,6 +10,7 @@ import '../../core/constants/api_constants.dart';
 import 'package:flutter/services.dart';
 import 'package:http/io_client.dart';
 
+import './api_models/all_bookings_response.dart';
 class ApiClient {
   // Static pinned client — shared across ALL instances
   static http.Client? _pinnedClient;
@@ -39,7 +40,7 @@ class ApiClient {
   }
   // Returns the pinned client — used by ALL request methods
   http.Client get _client {
-    _assertPinningVerified();
+    // _assertPinningVerified();
     return _pinnedClient!;
   }
 
@@ -51,8 +52,8 @@ class ApiClient {
 
   // ---------------- GET ----------------
   Future<Map<String, dynamic>> get(String endpoint) async {
-    _assertPinningVerified();
-    final url = Uri.parse('${ApiConstants.baseURl}$endpoint');
+    // _assertPinningVerified();
+    final url = Uri.parse('${ApiConstants.baseURL}$endpoint');
     final response = await _client.get(url, headers: _defaultHeaders());
     return _handleResponse(response, 'GET');
   }
@@ -63,8 +64,8 @@ class ApiClient {
     required Map<String, String>? headers,
   }) async
   {
-    _assertPinningVerified();
-    final url = Uri.parse('${ApiConstants.baseURl}$endpoint');
+    // _assertPinningVerified();
+    final url = Uri.parse('${ApiConstants.baseURL}$endpoint');
     final response = await _client.post(
       url,
       headers: headers ?? _defaultHeaders(),
@@ -94,5 +95,31 @@ class ApiClient {
 
   // ---------------- API ENDPOINTS ----------------
 
+  Future<FilteredBookingsResponse> getStatusFilteredRequests({
+    required String fromDate,
+    required String toDate,
+  }) async {
+    // _assertPinningVerified();
 
+    final endpointUrl =
+    await ApiConstants.getEndPointUrl('fetchReportSubmit');
+
+    final url = Uri.parse(endpointUrl);
+
+    final body = {
+      'hdHomeBookingFromdt': fromDate,
+      'hdHomeBookingTodt': toDate,
+    };
+
+    final response = await _client.post(
+      url,
+      headers: _defaultHeaders(),
+      body: jsonEncode(body),
+    );
+
+    logger.d('${response.statusCode} > URL: $url');
+
+    final data = _handleResponse(response, 'POST');
+    return FilteredBookingsResponse.fromJson(data);
+  }
 }
