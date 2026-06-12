@@ -14,38 +14,39 @@ import './api_models/all_bookings_response.dart';
 class ApiClient {
   // Static pinned client — shared across ALL instances
   static http.Client? _pinnedClient;
-  static bool _isPinningVerified = false; // static so all instances share it
+  // static bool _isPinningVerified = false; // static so all instances share it
 
   final Logger logger = Logger();
   // Called ONCE from main() before app loads
-  Future<void> initSSLPinning() async {
-    if (_isPinningVerified) return; // already done, skip
-    _pinnedClient = await _buildPinnedClient();
-    _isPinningVerified = true;
-    logger.d("SSL Pinning initialized");
-  }
+  // Future<void> initSSLPinning() async {
+  //   if (_isPinningVerified) return; // already done, skip
+  //   _pinnedClient = await _buildPinnedClient();
+  //   _isPinningVerified = true;
+  //   logger.d("SSL Pinning initialized");
+  // }
 
   // Builds the pinned HTTP client from your .pem cert
-  static Future<http.Client> _buildPinnedClient() async {
-    final sslCert = await rootBundle.load('assets/docs/bizapps-cert.pem');
-    final securityContext = SecurityContext();
-    securityContext.setTrustedCertificatesBytes(sslCert.buffer.asInt8List());
-
-    final httpClient = HttpClient(context: securityContext);
-    httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
-      return host == "bizapps.tatapower.com"; // only allow your domain
-    };
-
-    return IOClient(httpClient);
-  }
-  // Returns the pinned client — used by ALL request methods
+  // static Future<http.Client> _buildPinnedClient() async {
+  //   final sslCert = await rootBundle.load('assets/docs/bizapps-cert.pem');
+  //   final securityContext = SecurityContext();
+  //   securityContext.setTrustedCertificatesBytes(sslCert.buffer.asInt8List());
+  //
+  //   final httpClient = HttpClient(context: securityContext);
+  //   httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
+  //     return host == "bizapps.tatapower.com"; // only allow your domain
+  //   };
+  //
+  //   return IOClient(httpClient);
+  // }
+  // // Returns the pinned client — used by ALL request methods
   http.Client get _client {
     // _assertPinningVerified();
     return _pinnedClient!;
   }
 
   void _assertPinningVerified() {
-    if (!_isPinningVerified || _pinnedClient == null) {
+    // if (!_isPinningVerified || _pinnedClient == null) {
+    if(_pinnedClient == null){
       throw Exception("SSL Pinning not initialized. Call initSSLPinning() first.");
     }
   }

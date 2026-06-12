@@ -6,6 +6,7 @@ class ApiConstants {
   static String baseURL = "https://bizappsd.tatapower.com/dev/api/holiday-homes/hdhomes/api";
   static String serverURL = "https://bizapps.tatapower.com";
   static String empDetailsURL = "https://webappsprd.tatapower.com/EmpMgrDetailsAPI/api/user/getempdetails_from_MSSQL_BasedonEmpNO";
+  static String empProfileURL = "https://webappsprd.tatapower.com/Employeephotos";
 
   static String get shaFingerPrint => dotenv.env['SHA_FINGERPRINT'] ?? '';
 
@@ -41,10 +42,10 @@ class ApiConstants {
 
   // Action Buttons
   static const String fetchReportSubmit = "/PayRollData";
-  static
+  static const String holidayHomeMaster = "/hdhmmaster";
 
   // getX function for getting the "API endpoint url"
-  Future<String> getEndPointUrl(String endPointName) async {
+  static Future<String> getEndPointUrl(String endPointName) async {
     String endPointUrl = "";
     switch (endPointName) {
       case "searchModel":
@@ -54,6 +55,9 @@ class ApiConstants {
         break;
       case "fetchReportSubmit":
         endPointUrl = "$baseURL$fetchReportSubmit";
+        break;
+      case "holidayHomeMaster":
+        endPointUrl = "$baseURL$holidayHomeMaster";
         break;
     }
     return endPointUrl;

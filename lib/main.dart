@@ -14,7 +14,7 @@ Future<void> main() async {
 
   // Initialize SSL pinning BEFORE app loads
   try {
-    await globalApiClient.initSSLPinning();
+    // await globalApiClient.initSSLPinning();
   } catch (e) {
     // Pinning failed — run blocked app instead
     runApp(const SslBlockedScreen());
