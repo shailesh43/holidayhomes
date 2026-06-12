@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import 'package:holidayhomes/custom/modals/bookings_details_modal.dart';
 import 'package:holidayhomes/custom/widgets/bookings_card.dart';
 import 'package:holidayhomes/network/api_models/booking.dart';
 import '../widgets/custom_search_bar.dart';
 import '../../core/utils/enum.dart';
 import '../../network/api_client.dart';
+
 class SearchScreen extends StatefulWidget {
   final UserRole role;
 
-  SearchScreen({
+  const SearchScreen({
     Key? key,
     required this.role,
   }) : super(key: key);
@@ -18,21 +20,22 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-
   final ApiClient _client = ApiClient();
   bool isLoading = false;
-
+  bool _hasSearched = false;
+  final Logger logger = Logger();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  String selectedFilter = 'Active';
-  final List<Booking> activeRequests = [];
-  final List<Booking> inactiveRequests = [];
+  DateTimeRange? _selectedDateRange;
+  List<Booking> _allBookings = [];
 
   @override
   void initState() {
     super.initState();
-    _loadFilterBasedRequests();
+    final now = DateTime.now();
+    _selectedDateRange = DateTimeRange(start: now, end: now);
+
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.trim().toLowerCase();
@@ -40,59 +43,118 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  Future<void> _loadFilterBasedRequests() async {
+  // ── Date range picker ────────────────────────────────────────────────────
+  Future<void> _pickDateRange() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      initialDateRange: _selectedDateRange,
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color.fromRGBO(0, 100, 200, 0.85),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _selectedDateRange = picked);
+    }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  String _formatDate(DateTime dt) {
+    return '${dt.month.toString().padLeft(2, '0')}/'
+        '${dt.day.toString().padLeft(2, '0')}/'
+        '${dt.year}';
+  }
+
+  String get _dateRangeLabel {
+    if (_selectedDateRange == null) return 'Select Date Range';
+    return '${_formatDate(_selectedDateRange!.start)}'
+        ' - '
+        '${_formatDate(_selectedDateRange!.end)}';
+  }
+
+  // Formats to the required API shape:
+  // from → "2025-12-04T00:00:00.000Z"
+  // to   → "2026-06-12T23:59:59.000Z"
+  String _toFromDate(DateTime dt) {
+    final d = DateTime.utc(dt.year, dt.month, dt.day, 0, 0, 0, 0);
+    return d.toIso8601String().replaceFirst(RegExp(r'\.000$'), '.000Z');
+  }
+
+  String _toToDate(DateTime dt) {
+    final d = DateTime.utc(dt.year, dt.month, dt.day, 23, 59, 59, 0);
+    return '${dt.year.toString().padLeft(4, '0')}'
+        '-${dt.month.toString().padLeft(2, '0')}'
+        '-${dt.day.toString().padLeft(2, '0')}'
+        'T23:59:59.000Z';
+  }
+
+  // ── API call ─────────────────────────────────────────────────────────────
+  Future<void> _submitDateRange() async {
+    if (_selectedDateRange == null) return;
     setState(() {
       isLoading = true;
+      _hasSearched = true;
     });
 
-    // 1️⃣ Get the From and To date
+    final from = _toFromDate(_selectedDateRange!.start);
+    final to = _toToDate(_selectedDateRange!.end);
 
-    // if (empId == null || empId.isEmpty) {
-    //   debugPrint('Employee ID is null or empty');
-    //   setState(() => isLoading = false);
-    //   return;
-    // }
+    debugPrint('Fetching bookings: {hdHomeBookingFromdt: "$from", hdHomeBookingTodt: "$to"}');
 
     try {
-      // 2️⃣ API call (NEW endpoint)
       final response = await _client.getStatusFilteredRequests(
-        fromDate: '2026-01-12T00:00:00.000Z',
-        toDate: '2026-07-03T23:59:59.000Z',
+        fromDate: from,
+        toDate: to,
       );
+      setState(() {
+        _allBookings = response.data.data;
+        isLoading = false;
+      });
 
-      // 3️⃣ Update state
+      logger.d('Status: ${response.success}');
+      logger.d('Holiday Home: ${response.data.data.first.hdHomeName}');
+
     } catch (e) {
-      debugPrint('Error fetching status-filtered requests: $e');
+      debugPrint('Error fetching bookings: $e');
       setState(() => isLoading = false);
     }
   }
 
+  // ── Search filter ─────────────────────────────────────────────────────────
+  List<Booking> get _filteredBookings {
+    if (_searchQuery.isEmpty) return _allBookings;
+    return _allBookings.where((b) {
+      final name = b.hdHomeBookByEmpName?.toLowerCase() ?? '';
+      return name.contains(_searchQuery);
+    }).toList();
+  }
 
-  void _showDeleteRequestModal(BuildContext context, Booking request) {
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  void _openDetailsModal(BuildContext context, Booking booking) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => BookingsDetailsModal(request: request),
+      builder: (context) => BookingsDetailsModal(request: booking),
     );
   }
 
+  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-
-    final List<Booking> baseList =
-    selectedFilter == 'Active'
-        ? activeRequests
-        : inactiveRequests;
-
-    final List<Booking> filteredRequests =
-    _searchQuery.isEmpty
-        ? baseList
-        : baseList.where((request) {
-      final name = request.hdHomeBookByEmpName?.toLowerCase() ?? '';
-      return name.contains(_searchQuery);
-    }).toList();
-
+    final bookings = _filteredBookings;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -104,7 +166,7 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Search',
+          'Search Bookings',
           style: TextStyle(
             fontFamily: 'Inter',
             color: Colors.black,
@@ -114,96 +176,127 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Search Bar ───────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Column(
-              children: [
-                // 🔍 Search Bar
-                CustomSearchBar(
-                  controller: _searchController,
-                  hintText: 'Search by employee name',
-                ),
-                const SizedBox(height: 8),
+            child: CustomSearchBar(
+              controller: _searchController,
+              hintText: 'Search by employee name',
+            ),
+          ),
 
-                // 🔘 Filter Buttons
-                Row(
-                  children: [
-                    _buildFilterButton(
-                      label: 'Active',
-                      isSelected: selectedFilter == 'Active',
-                      activeColor: const Color.fromRGBO(215, 255, 216, 1.0),
-                      activeTextColor: const Color.fromRGBO(23, 86, 26, 1.0),
-                      onTap: () {
-                        setState(() {
-                          selectedFilter = 'Active';
-                        });
-                      },
+          // ── Date Range + Submit ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _pickDateRange,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 11,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: const Color.fromRGBO(0, 100, 200, 0.6),
+                          width: 1.2,
+                        ),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 15,
+                            color: Color.fromRGBO(0, 100, 200, 0.8),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _dateRangeLabel,
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Color.fromRGBO(0, 100, 200, 0.85),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    _buildFilterButton(
-                      label: 'Inactive',
-                      isSelected: selectedFilter == 'Inactive',
-                      activeColor: const Color.fromRGBO(255, 227, 227, 1.0),
-                      activeTextColor: const Color.fromRGBO(86, 23, 23, 1.0),
-                      onTap: () {
-                        setState(() {
-                          selectedFilter = 'Inactive';
-                        });
-                      },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: _submitDateRange,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 11,
                     ),
-                  ],
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(0, 100, 200, 0.85),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Text(
+                      'Submit',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // 📜 Requests List
+          // ── Bookings List ────────────────────────────────────────────────
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              switchInCurve: Curves.easeInOut,
-              switchOutCurve: Curves.easeInOut,
-              transitionBuilder:
-                  (Widget child, Animation<double> animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.0, 0.05),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: filteredRequests.isEmpty
-                  ? Center(
-                key: ValueKey<String>('empty_$selectedFilter'),
-                child: const Text(
-                  'No Such Requests',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    color: Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
+                : !_hasSearched
+                ? const Center(
+              child: Text(
+                'Select a date range and press Submit',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.black38,
+                  fontWeight: FontWeight.w400,
                 ),
-              )
-                  : ListView.builder(
-                key: ValueKey<String>(selectedFilter),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filteredRequests.length,
+              ),
+            )
+                : bookings.isEmpty
+                ? const Center(
+              child: Text(
+                'No bookings found',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            )
+                : RefreshIndicator(
+              onRefresh: _submitDateRange,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: bookings.length,
                 itemBuilder: (context, index) {
-                  final request = filteredRequests[index];
+                  final booking = bookings[index];
                   return BookingsCard(
-                    booking: request,
-                    onTap: () {
-                      _showDeleteRequestModal(context, request);
-                    },
+                    booking: booking,
+                    onTap: () => _openDetailsModal(context, booking),
                   );
                 },
               ),
@@ -214,45 +307,9 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildFilterButton({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-    Color activeColor = Colors.black,
-    Color activeTextColor = Colors.white,
-    Color inactiveColor = const Color.fromRGBO(255, 255, 255, 1.0),
-    Color inactiveTextColor = Colors.black45,
-    EdgeInsetsGeometry padding =
-    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-    double borderRadius = 20,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: isSelected ? activeColor : inactiveColor,
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(color: isSelected ? activeColor : Color.fromRGBO(
-              227, 227, 227, 1.0)),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            color: isSelected ? activeTextColor : inactiveTextColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
-
 }

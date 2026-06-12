@@ -5,7 +5,6 @@ import '../widgets/detail_row.dart';
 import '../../network/api_models/booking.dart';
 
 class BookingsCard extends StatelessWidget {
-  // final Map<String, dynamic> request;
   final Booking booking;
   final VoidCallback onTap;
 
@@ -48,14 +47,10 @@ class BookingsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-
             DetailRow(label: 'Holiday Home', value: booking.hdHomeName?.toString() ?? ''),
             DetailRow(label: 'EMP ID', value: booking.hdHomeBookByEmpno?.toString() ?? ''),
-            DetailRow(label: 'EMP Name', value: booking.hdHomeBookByEmpName.toString() ?? ''),
-            DetailRow(
-              label: 'Contact',
-              value: booking.hdHomeCaretakerMobile?.toString() ?? '',
-            ),
+            DetailRow(label: 'EMP Name', value: booking.hdHomeBookByEmpName?.toString() ?? ''),
+            DetailRow(label: 'Contact', value: booking.hdHomeCaretakerMobile?.toString() ?? ''),
           ],
         ),
       ),
