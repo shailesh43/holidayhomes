@@ -118,17 +118,17 @@ class _SearchScreenState extends State<SearchScreen> {
         fromDate: from,
         toDate: to,
       );
+
+      debugPrint("Bookings count = ${response.data.data.length}");
+
       setState(() {
         _allBookings = response.data.data;
         isLoading = false;
       });
 
-      logger.d('Status: ${response.success}');
-      logger.d('Holiday Home: ${response.data.data.first.hdHomeName}');
-
-    } catch (e) {
-      debugPrint('Error fetching bookings: $e');
-      setState(() => isLoading = false);
+    } catch (e, st) {
+      debugPrint("ERROR: $e");
+      debugPrint("STACK: $st");
     }
   }
 
