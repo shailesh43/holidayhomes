@@ -31,7 +31,7 @@ class BookingsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  booking.hdHomeBookingBY?.toString() ?? '',
+                  "${booking.hdHmTransSno?.toString()}" ?? '',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
@@ -40,7 +40,7 @@ class BookingsCard extends StatelessWidget {
                   ),
                 ),
                 const Icon(
-                  Icons.chevron_right,
+                  Icons.keyboard_arrow_up,
                   size: 20,
                   color: Colors.grey,
                 ),
@@ -48,9 +48,9 @@ class BookingsCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             DetailRow(label: 'Holiday Home', value: booking.hdHomeName?.toString() ?? ''),
-            DetailRow(label: 'EMP ID', value: booking.hdHomeBookByEmpno?.toString() ?? ''),
-            DetailRow(label: 'EMP Name', value: booking.hdHomeBookByEmpName?.toString() ?? ''),
-            DetailRow(label: 'Contact', value: booking.hdHomeCaretakerMobile?.toString() ?? ''),
+            DetailRow(label: 'Caretaker Contact', value: booking.hdHomeCaretakerMobile?.toString() ?? ''),
+            DetailRow(label: 'EMP ID', value: booking.hdHomeBookingEmpno?.toString() ?? ''),
+            DetailRow(label: 'EMP Name', value: booking.hdHomeBookingEmpname?.toString() ?? ''),
           ],
         ),
       ),
