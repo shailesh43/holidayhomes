@@ -35,11 +35,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
         <activity
             android:name="net.openid.appauth.RedirectUriReceiverActivity"
             android:exported="true"
+            android:theme="@style/RedirectTheme"
             tools:node="replace">
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -51,7 +52,25 @@
                     android:host="com.tatapower.holidayhomes"
                     android:path="/VzSiQcXRmi2kyjzcA+mYLEtbGVs=" />
             </intent-filter>
+
         </activity>
+
+<!--        <activity-->
+<!--            android:name="net.openid.appauth.RedirectUriReceiverActivity"-->
+<!--            android:exported="true"-->
+<!--            tools:node="replace">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+
+<!--                <data-->
+<!--                    android:scheme="msauth"-->
+<!--                    android:host="com.tatapower.holidayhomes"-->
+<!--                    android:path="/VzSiQcXRmi2kyjzcA+mYLEtbGVs=" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
 
     </application>
 
