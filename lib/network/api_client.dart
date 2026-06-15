@@ -41,7 +41,7 @@ class ApiClient {
   // // Returns the pinned client — used by ALL request methods
   http.Client get _client {
     // _assertPinningVerified();
-    return _pinnedClient!;
+    return _pinnedClient ?? http.Client();
   }
 
   void _assertPinningVerified() {
@@ -95,11 +95,12 @@ class ApiClient {
   }
 
   // ---------------- API ENDPOINTS ----------------
-
+  //  1. /PayRollData
   Future<FilteredBookingsResponse> getStatusFilteredRequests({
     required String fromDate,
     required String toDate,
-  }) async {
+  }) async
+  {
     // _assertPinningVerified();
 
     final endpointUrl =
@@ -121,6 +122,8 @@ class ApiClient {
     logger.d('${response.statusCode} > URL: $url');
 
     final data = _handleResponse(response, 'POST');
+    print("TYPE: ${data.runtimeType}");
+    print("DATA: $data");
     return FilteredBookingsResponse.fromJson(data);
   }
 }

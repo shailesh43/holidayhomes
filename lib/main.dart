@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import './network/api_client.dart';
-import './custom/screens/ssl_blocked_screen.dart';
+import 'custom/screens/error/ssl_blocked_screen.dart';
 import 'app.dart';
 
 // Global singleton so app.dart uses the same initialized instance

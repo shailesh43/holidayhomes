@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:holidayhomes/custom/screens/rogue_cert_screen.dart';
+import 'package:holidayhomes/custom/screens/error/rogue_cert_screen.dart';
 import 'package:http/io_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
