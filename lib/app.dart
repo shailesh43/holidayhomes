@@ -12,6 +12,15 @@ import './network/api_client.dart';
 import './core/utils/enum.dart';
 import './core/helpers/role_wise_screens.dart';
 import './core/helpers/emulator_detector.dart';
+import './core/utils/routes.dart';
+
+import 'package:holidayhomes/custom/screens/self_booking.dart';
+import 'package:holidayhomes/custom/screens/book_for_others.dart';
+import 'package:holidayhomes/custom/screens/guest_booking.dart';
+import 'package:holidayhomes/custom/screens/cancel_booking.dart';
+import 'package:holidayhomes/custom/screens/print_intimation.dart';
+import 'package:holidayhomes/custom/screens/search_bookings.dart';
+import 'package:holidayhomes/custom/screens/edit_guest_details.dart';
 import './main.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
@@ -282,6 +291,36 @@ class _AppState extends State<App> {
         scaffoldBackgroundColor: Colors.white,
       ),
       navigatorObservers: [routeObserver],
+      onGenerateRoute: (settings) {
+        final role = settings.arguments is UserRole
+            ? settings.arguments as UserRole
+            : UserRole.caretaker;
+        switch (settings.name) {
+          case Routes.selfBooking:
+            return MaterialPageRoute(
+                builder: (_) => SelfBooking(role: role));
+          case Routes.othersBooking:
+            return MaterialPageRoute(
+                builder: (_) => BookForOthers(role: role));
+          case Routes.guestBooking:
+            return MaterialPageRoute(
+                builder: (_) => GuestBooking(role: role));
+          case Routes.cancelBooking:
+            return MaterialPageRoute(
+                builder: (_) => CancelBooking(role: role));
+          case Routes.printIntimation:
+            return MaterialPageRoute(
+                builder: (_) => PrintIntimation(role: role));
+          case Routes.searchBooking:
+            return MaterialPageRoute(
+                builder: (_) => SearchBooking(role: role));
+          case Routes.editGuestDetails:
+            return MaterialPageRoute(
+                builder: (_) => EditGuestDetails(role: role));
+          default:
+            return null;
+        }
+      },
       home: FutureBuilder<_InitResult>(
         future: _initFuture,
         builder: (context, snapshot) {

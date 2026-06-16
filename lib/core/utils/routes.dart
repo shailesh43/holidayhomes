@@ -5,7 +5,7 @@ class Routes {
   static const guestBooking = '/guestBooking';
   static const cancelBooking = '/cancelBooking';
   static const printIntimation = '/printIntimation';
-  static const fetchReport = '/fetchReport';
+  static const searchBooking = '/searchBooking';
   static const editGuestDetails = '/editGuestDetails';
 
   // Booking Page workflows

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:holidayhomes/core/utils/enum.dart';
-import 'package:holidayhomes/custom/screens/search_bookings_screen.dart';
 import '../../custom/widgets/action_card_wide.dart';
 import '../../custom/widgets/action_button_square.dart';
+import '../../core/utils/routes.dart';
 
 class HomePage extends StatefulWidget {
   final UserRole role;
@@ -14,6 +14,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // ── Role-based access ───────────────────────────────────────────────────
+  // Adjust the role names/keys below to match your actual UserRole enum.
+  static const Map<String, List<UserRole>> _allowedRoles = {
+    Routes.selfBooking: [UserRole.caretaker, UserRole.admin],
+    Routes.othersBooking: [UserRole.admin],
+    Routes.guestBooking: [UserRole.caretaker, UserRole.admin],
+    Routes.cancelBooking: [UserRole.admin],
+    Routes.printIntimation: [UserRole.caretaker, UserRole.admin],
+    Routes.searchBooking: [UserRole.caretaker, UserRole.admin],
+    Routes.editGuestDetails: [UserRole.caretaker, UserRole.admin],
+  };
+
+  bool _isAllowed(String route) {
+    final roles = _allowedRoles[route];
+    if (roles == null) return true; // no restriction defined, allow by default
+    return roles.contains(widget.role);
+  }
+
+  void _navigateIfAllowed(String route) {
+    if (!_isAllowed(route)) return;
+    Navigator.pushNamed(context, route, arguments: widget.role);
+  }
+
   // ── Carousel state ─────────────────────────────────────────────────────────
   static const int _virtualCount = 50000;
   late final PageController _pageController;
@@ -79,31 +102,31 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Tata Power logo
-                  Flexible(
-                    child: Image.asset(
-                      'assets/images/tata_power_full_logo.png',
-                      height: 48,
-                      fit: BoxFit.contain,
-                      color: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Tata Power logo
+                    Flexible(
+                      child: Image.asset(
+                        'assets/images/tata_power_full_logo.png',
+                        height: 48,
+                        fit: BoxFit.contain,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  // User avatar (replaces "Holiday Homes" title)
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: const Color.fromRGBO(255, 255, 255, 0.25),
-                    backgroundImage: const AssetImage(
-                      'assets/images/user_login.jpg',
+                    // User avatar (replaces "Holiday Homes" title)
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: const Color.fromRGBO(255, 255, 255, 0.25),
+                      backgroundImage: const AssetImage(
+                        'assets/images/user_login.jpg',
+                      ),
+                      onBackgroundImageError: (_, __) {},
+                      child: null,
                     ),
-                    onBackgroundImageError: (_, __) {},
-                    child: null,
-                  ),
-                ],
-              )
+                  ],
+                )
             ),
           ),
 
@@ -244,22 +267,26 @@ class _HomePageState extends State<HomePage> {
                           ActionButtonSquare(
                             icon: Icons.home_outlined,
                             label: 'Self\nBooking',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.selfBooking),
+                            onTap: () => _navigateIfAllowed(Routes.selfBooking),
                           ),
                           ActionButtonSquare(
                             icon: Icons.people_outline,
                             label: 'Book For\nothers',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.othersBooking),
+                            onTap: () => _navigateIfAllowed(Routes.othersBooking),
                           ),
                           ActionButtonSquare(
                             icon: Icons.location_history_outlined,
                             label: 'Guest\nBooking',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.guestBooking),
+                            onTap: () => _navigateIfAllowed(Routes.guestBooking),
                           ),
                           ActionButtonSquare(
                             icon: Icons.delete_outline,
                             label: 'Cancel\nBooking',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.cancelBooking),
+                            onTap: () => _navigateIfAllowed(Routes.cancelBooking),
                           ),
                         ],
                       ),
@@ -289,15 +316,8 @@ class _HomePageState extends State<HomePage> {
                             icon: Icons.search,
                             title: 'Search Bookings',
                             subtitle: 'Browse through all the home bookings',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      SearchScreen(role: widget.role),
-                                ),
-                              );
-                            },
+                            enabled: _isAllowed(Routes.searchBooking),
+                            onTap: () => _navigateIfAllowed(Routes.searchBooking),
                           ),
                           const Divider(
                             height: 0.5,
@@ -309,7 +329,8 @@ class _HomePageState extends State<HomePage> {
                             title: 'Print intimation',
                             subtitle:
                             'Get your booking Id intimation slip in pdf',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.printIntimation),
+                            onTap: () => _navigateIfAllowed(Routes.printIntimation),
                           ),
                           const Divider(
                             height: 0.5,
@@ -320,7 +341,8 @@ class _HomePageState extends State<HomePage> {
                             icon: Icons.person_add_alt_outlined,
                             title: 'Edit Guest Details',
                             subtitle: 'Add guests to your home booking',
-                            onTap: () {},
+                            enabled: _isAllowed(Routes.editGuestDetails),
+                            onTap: () => _navigateIfAllowed(Routes.editGuestDetails),
                           ),
                         ],
                       ),

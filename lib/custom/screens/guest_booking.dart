@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:holidayhomes/core/utils/enum.dart';
 
-class SelfBooking extends StatefulWidget {
+class GuestBooking extends StatefulWidget {
   final UserRole  role;
-  const SelfBooking({super.key, required this.role});
+  const GuestBooking({super.key, required this.role});
 
   @override
-  State<SelfBooking> createState() => _SelfBookingState();
+  State<GuestBooking> createState() => _GuestBookingState();
 }
 
-class _SelfBookingState extends State<SelfBooking> {
+class _GuestBookingState extends State<GuestBooking> {
   @override
   Widget build(BuildContext context) {
     return const Placeholder();

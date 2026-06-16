@@ -7,19 +7,16 @@ import '../widgets/custom_search_bar.dart';
 import '../../core/utils/enum.dart';
 import '../../network/api_client.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchBooking extends StatefulWidget {
   final UserRole role;
+  const SearchBooking({super.key, required this.role});
 
-  const SearchScreen({
-    Key? key,
-    required this.role,
-  }) : super(key: key);
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  State<SearchBooking> createState() => _SearchBookingState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchBookingState extends State<SearchBooking> {
   final ApiClient _client = ApiClient();
   bool isLoading = false;
   bool _hasSearched = false;
