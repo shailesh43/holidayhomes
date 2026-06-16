@@ -98,51 +98,55 @@ class Booking {
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      hdHmTransSno: json['hd_hm_trans_sno'] ?? 0,
-      hdHomelocCd: json['hd_homeloc_cd'] ?? 0,
-      hdLocName: json['hd_loc_name'] ?? '',
-      hdHomeCd: json['hd_home_cd'] ?? 0,
-      hdHomeName: json['hd_home_name'] ?? '',
-      hdHomeSuiteCd: json['hd_home_suite_cd'] ?? 0,
-      hdHomeSuiteName: json['hd_home_suite_name'] ?? '',
-      hdHomeSuiteCatg: json['hd_home_suite_catg'] ?? '',
-      hdHomeBookingEmpno: json['hd_home_booking_empno'] ?? 0,
-      hdHomeBookingEmpname: json['hd_home_booking_empname'] ?? '',
-      hdHomeBookingEmpemail: json['hd_home_booking_empemail'] ?? '',
-      hdHomeBookingEmpmob: json['hd_home_booking_empmob'] ?? '',
-      hdHomeBookingEmpdept: json['hd_home_booking_empdept'] ?? '',
-      hdHomeBookingEmpdesig: json['hd_home_booking_empdesig'] ?? '',
-      hdHomeBookingEmpcostcent: json['hd_home_booking_empcostcent'] ?? '',
-      hdHomeBookingFromdt: json['hd_home_booking_fromdt'] ?? '',
-      hdHomeBookingTodt: json['hd_home_booking_todt'] ?? '',
+      hdHmTransSno: _toInt(json['hd_hm_trans_sno']),
+      hdHomelocCd: _toInt(json['hd_homeloc_cd']),
+      hdLocName: json['hd_loc_name']?.toString() ?? '',
+      hdHomeCd: _toInt(json['hd_home_cd']),
+      hdHomeName: json['hd_home_name']?.toString() ?? '',
+      hdHomeSuiteCd: _toInt(json['hd_home_suite_cd']),
+      hdHomeSuiteName: json['hd_home_suite_name']?.toString() ?? '',
+      hdHomeSuiteCatg: json['hd_home_suite_catg']?.toString() ?? '',
+      hdHomeBookingEmpno: _toInt(json['hd_home_booking_empno']),
+      hdHomeBookingEmpname: json['hd_home_booking_empname']?.toString() ?? '',
+      hdHomeBookingEmpemail: json['hd_home_booking_empemail']?.toString() ?? '',
+      hdHomeBookingEmpmob: json['hd_home_booking_empmob']?.toString() ?? '',
+      hdHomeBookingEmpdept: json['hd_home_booking_empdept']?.toString() ?? '',
+      hdHomeBookingEmpdesig: json['hd_home_booking_empdesig']?.toString() ?? '',
+      hdHomeBookingEmpcostcent: json['hd_home_booking_empcostcent']?.toString() ?? '',
+      hdHomeBookingFromdt: json['hd_home_booking_fromdt']?.toString() ?? '',
+      hdHomeBookingTodt: json['hd_home_booking_todt']?.toString() ?? '',
       hdHomeBookingIscancel: json['hd_home_booking_iscancel'],
       hdHomeBookingCanceldt: json['hd_home_booking_canceldt'],
       hdHomeBookingCancelBY: json['hd_home_booking_cancel_b_y'],
       hdHomeBookingCancelremark: json['hd_home_booking_cancelremark'],
-      hdHomeBookingWaiting: json['hd_home_booking_waiting'] ?? 0,
-      hdHomeBookingCurrwaiting:
-      json['hd_home_booking_currwaiting'] ?? 0,
-      hdHomeBookingBY: json['hd_home_booking_b_y'] ?? '',
+      hdHomeBookingWaiting: _toInt(json['hd_home_booking_waiting']),
+      hdHomeBookingCurrwaiting: _toInt(json['hd_home_booking_currwaiting']),
+      hdHomeBookingBY: json['hd_home_booking_b_y']?.toString() ?? '',
       hdHomeBookingRating: json['hd_home_booking_rating'],
       hdHomeBookingFeedback: json['hd_home_booking_feedback'],
       hdHomeBookingStatus: json['hd_home_booking_status'],
-      hdHomeBookByEmpno: json['hd_home_book_by_empno'] ?? 0,
-      hdHomeBookByEmpName: json['hd_home_book_by_emp_name'] ?? '',
-      hdHomeBookByEmail: json['hd_home_book_by_email'] ?? '',
-      hdHomeBookingActive: json['hd_home_booking_active'] ?? '',
-      hdHomeBookingInsBy: json['hd_home_booking_ins_by'] ?? '',
-      hdHomeBookingInsDate: json['hd_home_booking_ins_date'] ?? '',
+      hdHomeBookByEmpno: _toInt(json['hd_home_book_by_empno']),
+      hdHomeBookByEmpName: json['hd_home_book_by_emp_name']?.toString() ?? '',
+      hdHomeBookByEmail: json['hd_home_book_by_email']?.toString() ?? '',
+      hdHomeBookingActive: json['hd_home_booking_active']?.toString() ?? '',
+      hdHomeBookingInsBy: json['hd_home_booking_ins_by']?.toString() ?? '',
+      hdHomeBookingInsDate: json['hd_home_booking_ins_date']?.toString() ?? '',
       hdHomeCheckin: json['hd_home_checkin'],
       hdHomeCheckindt: json['hd_home_checkindt'],
       hdHomeCheckinby: json['hd_home_checkinby'],
-      hdHomeBookingStatusCd:
-      json['hd_home_booking_status_cd'] ?? 0,
+      hdHomeBookingStatusCd: _toInt(json['hd_home_booking_status_cd']),
       bookingStatus: (json['booking_status'] ?? '').toString().trim(),
-      hdHomeCaretakername: json['hd_home_caretakername'] ?? '',
-      hdHomeCaretakerEmail:
-      json['hd_home_caretaker_email'] ?? '',
-      hdHomeCaretakerMobile:
-      json['hd_home_caretaker_mobile'] ?? 0,
+      hdHomeCaretakername: json['hd_home_caretakername']?.toString() ?? '',
+      hdHomeCaretakerEmail: json['hd_home_caretaker_email']?.toString() ?? '',
+      hdHomeCaretakerMobile: _toInt(json['hd_home_caretaker_mobile']), // ← most likely culprit
     );
+  }
+
+// Add this helper at the bottom of the class (outside fromJson)
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
   }
 }
