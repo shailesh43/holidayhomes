@@ -7,10 +7,13 @@ import 'package:dio/dio.dart';
 
 // REFERENCES
 import '../../core/constants/api_constants.dart';
-import 'package:flutter/services.dart';
-import 'package:http/io_client.dart';
 
+// API MODELS
 import './api_models/all_bookings_response.dart';
+import './api_models/booking_id_response.dart';
+import './api_models/guest_info_response.dart';
+import './api_models/intimation_data.dart';
+
 class ApiClient {
   // Static pinned client — shared across ALL instances
   static http.Client? _pinnedClient;
@@ -125,5 +128,74 @@ class ApiClient {
     print("TYPE: ${data.runtimeType}");
     print("DATA: $data");
     return FilteredBookingsResponse.fromJson(data);
+  }
+
+  // https://bizappsd.tatapower.com/dev/api/holiday-homes/hdhomes/api/master/search?model=findbooking&bookingID=3300
+  Future<BookingIdResponse> findBookingById({
+    required String bookingId,
+  }) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
+
+    final url = Uri.parse(
+      '$endpointUrl?model=findbooking&bookingId=$bookingId',
+    );
+
+    final response = await _client.get(
+      url,
+      headers: _defaultHeaders(),
+    );
+
+    logger.d('${response.statusCode} > URL: $url');
+
+    final data = _handleResponse(response, 'POST');
+    print("TYPE: ${data.runtimeType}");
+    print("DATA: $data");
+    return BookingIdResponse.fromJson(data);
+  }
+
+  // https://bizappsd.tatapower.com/dev/api/holiday-homes/hdhomes/api/master/search?model=mybookinginfo&transno=3300
+  Future<GuestInfoResponse> getGuestsInfo({
+    required String bookingId,
+  }) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
+
+    final url = Uri.parse(
+      '$endpointUrl?model=mybookinginfo&transno=$bookingId',
+    );
+
+    final response = await _client.get(
+      url,
+      headers: _defaultHeaders(),
+    );
+
+    logger.d('${response.statusCode} > URL: $url');
+
+    final data = _handleResponse(response, 'POST');
+    print("TYPE: ${data.runtimeType}");
+    print("DATA: $data");
+    return GuestInfoResponse.fromJson(data);
+  }
+
+  /// Single Future that calls both endpoints together and returns a combined
+  /// result — this is what the PrintIntimation screen should call.
+  Future<IntimationData> getIntimationData({
+    required String bookingId,
+  }) async {
+    final results = await Future.wait([
+      findBookingById(bookingId: bookingId),
+      getGuestsInfo(bookingId: bookingId),
+    ]);
+
+    final bookingResponse = results[0] as BookingIdResponse;
+    final guestResponse = results[1] as GuestInfoResponse;
+
+    if (!bookingResponse.success || bookingResponse.data.isEmpty) {
+      throw Exception('No booking found for Booking Id: $bookingId');
+    }
+
+    return IntimationData(
+      booking: bookingResponse.data.first,
+      guests: guestResponse.success ? guestResponse.data : [],
+    );
   }
 }
