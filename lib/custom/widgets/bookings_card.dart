@@ -8,7 +8,7 @@ class BookingsCard extends StatelessWidget {
   final Booking booking;
   final VoidCallback onTap;
 
-  const BookingsCard({
+  const BookingsCard({super.key, 
     required this.booking,
     required this.onTap,
   });
@@ -31,7 +31,7 @@ class BookingsCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "${booking.hdHmTransSno?.toString()}" ?? '',
+                  booking.hdHmTransSno.toString() ?? '',
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
@@ -47,10 +47,10 @@ class BookingsCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            DetailRow(label: 'Holiday Home', value: booking.hdHomeName?.toString() ?? ''),
-            DetailRow(label: 'Caretaker Contact', value: booking.hdHomeCaretakerMobile?.toString() ?? ''),
-            DetailRow(label: 'EMP ID', value: booking.hdHomeBookingEmpno?.toString() ?? ''),
-            DetailRow(label: 'EMP Name', value: booking.hdHomeBookingEmpname?.toString() ?? ''),
+            DetailRow(label: 'Holiday Home', value: booking.hdHomeName.toString() ?? ''),
+            DetailRow(label: 'Caretaker Contact', value: booking.hdHomeCaretakerMobile.toString() ?? ''),
+            DetailRow(label: 'EMP ID', value: booking.hdHomeBookingEmpno.toString() ?? ''),
+            DetailRow(label: 'EMP Name', value: booking.hdHomeBookingEmpname.toString() ?? ''),
           ],
         ),
       ),

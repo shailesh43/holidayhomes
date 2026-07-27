@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:holidayhomes/features/bookings/bookings_page.dart';
 import 'package:holidayhomes/features/home/home_page.dart';
-import 'package:holidayhomes/features/policy/policy_page.dart';
-import '../../features/bookings/bookings_page.dart';
-import '../../features/home/home_page.dart';
-import '../../features/policy/policy_page.dart';
+import 'package:holidayhomes/features/manual/manual.dart';
 
 import '../../core/utils/enum.dart';
 import '../constants/local_prefs.dart';

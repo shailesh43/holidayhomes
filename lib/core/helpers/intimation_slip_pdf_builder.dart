@@ -1,13 +1,15 @@
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:holidayhomes/network/api_models/booking.dart';
+
+// 🛠️ FIXED: Imported the modern BookingDataResponse model instead of the old one
+import 'package:holidayhomes/network/api_models/booking_data_response.dart';
 import 'package:holidayhomes/network/api_models/guest_info_response.dart';
 
 /// Builds the Intimation Slip PDF, mirroring print-a.component.html
-/// field-for-field, using the real Booking and GuestInfo models.
+/// field-for-field, using the real BookingData and GuestInfo models.
 class IntimationSlipPdfBuilder {
   static Future<pw.Document> build({
-    required Booking booking,
+    required BookingData booking, // 🛠️ FIXED: Changed from Booking to BookingData
     required List<GuestInfo> guests,
   }) async {
     final doc = pw.Document();
@@ -56,14 +58,14 @@ class IntimationSlipPdfBuilder {
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          _labelRow('Application No:',
-                              booking.hdHmTransSno.toString()),
+                          // 🛠️ FIXED: Added null safety (?? 'N/A') to all model fields
+                          _labelRow('Application No:', booking.hdHmTransSno?.toString() ?? 'N/A'),
                           pw.SizedBox(height: 4),
-                          _labelRow('Holiday Home:', booking.hdHomeName),
+                          _labelRow('Holiday Home:', booking.hdHomeName ?? 'N/A'),
                           pw.SizedBox(height: 4),
-                          _labelRow('Name:', booking.hdHomeBookingEmpname),
+                          _labelRow('Name:', booking.hdHomeBookingEmpname ?? 'N/A'),
                           pw.SizedBox(height: 4),
-                          _labelRow('Dept:', booking.hdHomeBookingEmpdept),
+                          _labelRow('Dept:', booking.hdHomeBookingEmpdept ?? 'N/A'),
                         ],
                       ),
                     ),
@@ -104,19 +106,20 @@ class IntimationSlipPdfBuilder {
                   children: [
                     pw.Text('To,'),
                     pw.SizedBox(height: 4),
+                    // 🛠️ FIXED: Added null safety interpolation
                     pw.Text(
-                      '${booking.hdHomeCaretakername},${booking.hdHomeCaretakerMobile},',
+                      '${booking.hdHomeCaretakername ?? 'N/A'}, ${booking.hdHomeCaretakerMobile?.toString() ?? 'N/A'},',
                     ),
-                    pw.Text('${booking.hdHomeName},'),
+                    pw.Text('${booking.hdHomeName ?? 'N/A'},'),
                     pw.SizedBox(height: 14),
 
                     // Allotment paragraph
                     pw.Text(
-                      '${booking.hdHomeBookingEmpname} Employee Number ${booking.hdHomeBookingEmpno} '
-                          '${booking.hdHomeBookingEmpdept} is allotted ${booking.hdHomeSuiteName}.'
-                          'for a period of ${_computeDays(booking.hdHomeBookingFromdt, booking.hdHomeBookingTodt)} Days '
-                          'from ${booking.hdHomeBookingFromdt}. (Check-in at 1.00 pm) '
-                          'to ${booking.hdHomeBookingTodt}. (Check-out at 10.00 am).',
+                      '${booking.hdHomeBookingEmpname ?? 'N/A'} Employee Number ${booking.hdHomeBookingEmpno?.toString() ?? 'N/A'} '
+                          '${booking.hdHomeBookingEmpdept ?? 'N/A'} is allotted ${booking.hdHomeSuiteName ?? 'N/A'}. '
+                          'for a period of ${_computeDays(booking.hdHomeBookingFromdt ?? '', booking.hdHomeBookingTodt ?? '')} Days '
+                          'from ${booking.hdHomeBookingFromdt ?? 'N/A'}. (Check-in at 1.00 pm) '
+                          'to ${booking.hdHomeBookingTodt ?? 'N/A'}. (Check-out at 10.00 am).',
                       style: const pw.TextStyle(fontSize: 10),
                     ),
                   ],
@@ -158,8 +161,8 @@ class IntimationSlipPdfBuilder {
                       ...guests.map(
                             (g) => pw.TableRow(
                           children: [
-                            _tableCell(g.guestName),
-                            _tableCell(g.relName),
+                            _tableCell(g.guestName ?? 'N/A'),
+                            _tableCell(g.relName ?? 'N/A'),
                           ],
                         ),
                       ),

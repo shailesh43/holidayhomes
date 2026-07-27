@@ -6,22 +6,24 @@ import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:jailbreak_root_detection/jailbreak_root_detection.dart';
 
-import './auth/azure_auth.dart';
-import './core/constants/local_prefs.dart';
-import './network/api_client.dart';
-import './core/utils/enum.dart';
-import './core/helpers/role_wise_screens.dart';
-import './core/helpers/emulator_detector.dart';
-import './core/utils/routes.dart';
+// Standard Relative Imports (Matches your exact folder structure)
+import 'auth/azure_auth.dart';
+import 'core/constants/local_prefs.dart';
+import 'network/api_client.dart';
+import 'core/utils/enum.dart';
+import 'core/helpers/role_wise_screens.dart';
+import 'core/helpers/emulator_detector.dart';
+import 'core/utils/routes.dart';
+import 'main.dart'; // Gives access to globalApiClient
 
-import 'package:holidayhomes/custom/screens/self_booking.dart';
-import 'package:holidayhomes/custom/screens/book_for_others.dart';
-import 'package:holidayhomes/custom/screens/guest_booking.dart';
-import 'package:holidayhomes/custom/screens/cancel_booking.dart';
-import 'package:holidayhomes/custom/screens/print_intimation.dart';
-import 'package:holidayhomes/custom/screens/search_bookings.dart';
-import 'package:holidayhomes/custom/screens/edit_guest_details.dart';
-import './main.dart';
+// Screen Imports
+import 'custom/screens/self_booking_screen.dart';
+import 'custom/screens/book_for_others_screen.dart';
+import 'custom/screens/guest_booking_screen.dart';
+import 'custom/screens/cancel_booking_screen.dart';
+import 'custom/screens/print_intimation_screen.dart';
+import 'custom/screens/search_bookings_screen.dart';
+import 'custom/screens/edit_guest_details_screen.dart';
 
 final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
 
@@ -50,7 +52,9 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
+  // Uses globalApiClient from main.dart to ensure SSL pinning remains active
   final ApiClient _client = globalApiClient;
+
   late Future<_InitResult> _initFuture;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -103,8 +107,7 @@ class _AppState extends State<App> {
         } else if (isEmulatorDevice) {
           showErrorDialog('The Tata Power GreenGears app cannot run on an emulator. Please install the app on a physical device.');
         } else if (hasRogueCA) {
-          showErrorDialog(
-              'A user-installed CA certificate was detected on this device.');
+          showErrorDialog('A user-installed CA certificate was detected on this device.');
         }
         return const _InitResult.emulatorBlocked();
       }
@@ -199,8 +202,7 @@ class _AppState extends State<App> {
                 borderRadius: BorderRadius.circular(15),
               ),
               margin: const EdgeInsets.symmetric(horizontal: 15),
-              padding:
-              const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 20),
               child: Material(
                 color: Colors.transparent,
                 child: Column(
@@ -209,20 +211,12 @@ class _AppState extends State<App> {
                   children: [
                     const Text(
                       'Error',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(color: Colors.red, fontSize: 22, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 15),
                     Text(
                       message,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w400),
                     ),
                     const SizedBox(height: 25),
                     SizedBox(
@@ -230,8 +224,7 @@ class _AppState extends State<App> {
                       child: ElevatedButton(
                         onPressed: () => exit(0),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          const Color.fromRGBO(250, 98, 98, 1.0),
+                          backgroundColor: const Color.fromRGBO(250, 98, 98, 1.0),
                           foregroundColor: Colors.white,
                         ),
                         child: const Row(
@@ -265,7 +258,6 @@ class _AppState extends State<App> {
     return const _InitResult.cancelled();
   }
 
-  // Call fetchRole api here
   Future<UserRole> _fetchEmployeeRole(String empCode) async {
     if (empCode.isEmpty) return UserRole.caretaker;
     try {
@@ -291,36 +283,18 @@ class _AppState extends State<App> {
         scaffoldBackgroundColor: Colors.white,
       ),
       navigatorObservers: [routeObserver],
-      onGenerateRoute: (settings) {
-        final role = settings.arguments is UserRole
-            ? settings.arguments as UserRole
-            : UserRole.caretaker;
-        switch (settings.name) {
-          case Routes.selfBooking:
-            return MaterialPageRoute(
-                builder: (_) => SelfBooking(role: role));
-          case Routes.othersBooking:
-            return MaterialPageRoute(
-                builder: (_) => BookForOthers(role: role));
-          case Routes.guestBooking:
-            return MaterialPageRoute(
-                builder: (_) => GuestBooking(role: role));
-          case Routes.cancelBooking:
-            return MaterialPageRoute(
-                builder: (_) => CancelBooking(role: role));
-          case Routes.printIntimation:
-            return MaterialPageRoute(
-                builder: (_) => PrintIntimation(role: role));
-          case Routes.searchBooking:
-            return MaterialPageRoute(
-                builder: (_) => SearchBooking(role: role));
-          case Routes.editGuestDetails:
-            return MaterialPageRoute(
-                builder: (_) => EditGuestDetails(role: role));
-          default:
-            return null;
-        }
+
+      routes: {
+        // ── 🛠️ FIXED: Reverted to simple routing without arguments! ──
+        Routes.selfBooking: (context) => const SelfBookingScreen(),
+        Routes.othersBooking: (context) => const BookForOthersScreen(),
+        Routes.guestBooking: (context) => const GuestBookingScreen(),
+        Routes.cancelBooking: (context) => const CancelBookingScreen(),
+        Routes.printIntimation: (context) => const PrintIntimation(role: UserRole.caretaker),
+        Routes.searchBooking: (context) => const SearchBooking(role: UserRole.caretaker),
+        Routes.editGuestDetails: (context) => const EditGuestDetails(role: UserRole.caretaker),
       },
+
       home: FutureBuilder<_InitResult>(
         future: _initFuture,
         builder: (context, snapshot) {
@@ -362,8 +336,7 @@ class _AppState extends State<App> {
             );
           }
 
-          final isCancelled =
-              result?.loginResult == _LoginResult.cancelled;
+          final isCancelled = result?.loginResult == _LoginResult.cancelled;
           return Scaffold(
             body: Center(
               child: Column(
@@ -408,12 +381,11 @@ class _AppState extends State<App> {
                       });
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.80),
+                      backgroundColor: Colors.white.withValues(alpha: 0.80),
                       foregroundColor: Colors.black,
                       elevation: 6,
-                      shadowColor: Colors.black.withOpacity(0.20),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 14),
+                      shadowColor: Colors.black.withValues(alpha: 0.20),
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

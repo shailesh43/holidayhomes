@@ -3,7 +3,6 @@ import '../widgets/detail_row.dart';
 import '../../network/api_models/booking.dart';
 import '../../network/api_client.dart';
 import 'dart:core';
-import 'package:intl/intl.dart';
 import './base_modal.dart';
 class BookingsDetailsModal extends StatefulWidget {
   final Booking request;
@@ -44,26 +43,26 @@ class _BookingsDetailsModalState extends State<BookingsDetailsModal> {
     final request = widget.request;
     return BaseModal(
       request: request,
-      title: "Booking ID: ${request.hdHmTransSno?.toString()}" ?? '',
+      title: "Booking ID: ${request.hdHmTransSno.toString()}" ?? '',
 
       /// CONTENT
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DetailRow(label: 'Location', value: widget.request.hdLocName?.toString() ?? 'NULL'),
-          DetailRow(label: 'Holiday Home', value: widget.request.hdHomeName?.toString() ?? 'NULL'),
-          DetailRow(label: 'Suite Name', value: widget.request.hdHomeSuiteName?.toString() ?? 'NULL'),
-          DetailRow(label: 'Caretaker Name', value: widget.request.hdHomeCaretakername?.toString() ?? 'NULL'),
-          DetailRow(label: 'Caretaker Email', value: widget.request.hdHomeCaretakerEmail?.toString() ?? 'NULL'),
-          DetailRow(label: 'Caretaker Mobile', value: widget.request.hdHomeCaretakerMobile?.toString() ?? 'NULL'),
+          DetailRow(label: 'Location', value: widget.request.hdLocName.toString() ?? 'NULL'),
+          DetailRow(label: 'Holiday Home', value: widget.request.hdHomeName.toString() ?? 'NULL'),
+          DetailRow(label: 'Suite Name', value: widget.request.hdHomeSuiteName.toString() ?? 'NULL'),
+          DetailRow(label: 'Caretaker Name', value: widget.request.hdHomeCaretakername.toString() ?? 'NULL'),
+          DetailRow(label: 'Caretaker Email', value: widget.request.hdHomeCaretakerEmail.toString() ?? 'NULL'),
+          DetailRow(label: 'Caretaker Mobile', value: widget.request.hdHomeCaretakerMobile.toString() ?? 'NULL'),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8E8)),
           const SizedBox(height: 12,),
           DetailRow(label: 'Employee Name', value: widget.request.hdHomeBookingEmpname ?? 'NULL'),
           DetailRow(label: 'Employee Email', value: widget.request.hdHomeBookingEmpemail ?? 'NULL'),
-          DetailRow(label: 'Employee Code', value: widget.request.hdHomeBookingEmpno?.toString() ?? 'NULL'),
-          DetailRow(label: 'From', value: widget.request.hdHomeBookingFromdt?.toString() ?? 'NULL'),
-          DetailRow(label: 'To', value: widget.request.hdHomeBookingTodt?.toString() ?? 'NULL'),
-          DetailRow(label: 'Number of Days', value: calculateBookingDays(widget.request.hdHomeBookingFromdt, widget.request.hdHomeBookingTodt)?.toString() ?? 'NULL'),
+          DetailRow(label: 'Employee Code', value: widget.request.hdHomeBookingEmpno.toString() ?? 'NULL'),
+          DetailRow(label: 'From', value: widget.request.hdHomeBookingFromdt.toString() ?? 'NULL'),
+          DetailRow(label: 'To', value: widget.request.hdHomeBookingTodt.toString() ?? 'NULL'),
+          DetailRow(label: 'Number of Days', value: calculateBookingDays(widget.request.hdHomeBookingFromdt, widget.request.hdHomeBookingTodt).toString() ?? 'NULL'),
           const SizedBox(height: 12),
           const Divider(height: 1, thickness: 1, color: Color(0xFFE8E8E8)),
           const SizedBox(height: 12),

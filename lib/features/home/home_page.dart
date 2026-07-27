@@ -1,9 +1,23 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:holidayhomes/core/utils/enum.dart';
 import '../../custom/widgets/action_card_wide.dart';
 import '../../custom/widgets/action_button_square.dart';
 import '../../core/utils/routes.dart';
+
+// ── NEW IMPORTS FOR PROFILE & LOGOUT ──
+import 'package:holidayhomes/core/constants/local_prefs.dart';
+import 'package:holidayhomes/core/constants/api_constants.dart';
+import 'package:holidayhomes/auth/azure_auth.dart';
+import 'package:holidayhomes/app.dart';
+import 'package:holidayhomes/main.dart'; // For globalApiClient
+
+// ── MODELS ──
+import 'package:holidayhomes/network/api_models/employee_response.dart';
+import 'package:holidayhomes/network/api_models/post_response.dart';
 
 class HomePage extends StatefulWidget {
   final UserRole role;
@@ -14,8 +28,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // ── Role-based access ───────────────────────────────────────────────────
-  // Adjust the role names/keys below to match your actual UserRole enum.
+  // ── Profile Data State ──
+  String? _empNo;
+  String? _empName;
+  String? _empRoleDesc;
+
+  // ── Role-based access ──
   static const Map<String, List<UserRole>> _allowedRoles = {
     Routes.selfBooking: [UserRole.caretaker, UserRole.admin],
     Routes.othersBooking: [UserRole.admin],
@@ -28,7 +46,7 @@ class _HomePageState extends State<HomePage> {
 
   bool _isAllowed(String route) {
     final roles = _allowedRoles[route];
-    if (roles == null) return true; // no restriction defined, allow by default
+    if (roles == null) return true;
     return roles.contains(widget.role);
   }
 
@@ -37,15 +55,16 @@ class _HomePageState extends State<HomePage> {
     Navigator.pushNamed(context, route, arguments: widget.role);
   }
 
-  // ── Carousel state ─────────────────────────────────────────────────────────
+  // ── Carousel state ──
   static const int _virtualCount = 50000;
   late final PageController _pageController;
 
   int get _initialVirtualPage => (_virtualCount ~/ 2) -
-      (_virtualCount ~/ 2) % _carouselItems.length;  int _currentPage = 0;
+      (_virtualCount ~/ 2) % _carouselItems.length;
+
+  int _currentPage = 0;
   Timer? _autoScrollTimer;
 
-  // Replace filenames / labels once real assets are added
   final List<Map<String, String>> _carouselItems = const [
     {'image': 'assets/images/places/Paradise_Village_Goa.jpg', 'location': 'Paradise Village, Goa'},
     {'image': 'assets/images/places/Lonavala.jpg', 'location': 'Lonavala'},
@@ -62,6 +81,65 @@ class _HomePageState extends State<HomePage> {
       initialPage: _initialVirtualPage,
     );
     _startAutoScroll();
+
+    // 🚀 Fetch profile picture, name, and role immediately on load
+    _loadUserProfile();
+  }
+
+  // ── Profile Fetch Logic ──
+  Future<void> _loadUserProfile() async {
+    final empNo = await LocalPrefs.getEmpCode();
+    if (empNo == null || empNo.isEmpty) return;
+
+    setState(() => _empNo = empNo);
+
+    try {
+      // 1. Fetch Employee Details for the Name
+      final empRes = await globalApiClient.verifyEmployee(empId: empNo);
+
+      // 🛠️ FIXED: Added != null and ! to handle nullable lists safely
+      if (empRes.data != null && empRes.data!.isNotEmpty) {
+        // Note: If you get a red line on 'sapDispName' here, change it to 'sAPDISPNAME' depending on how your model is typed!
+        _empName = empRes.data!.first.sAPDISPNAME;
+      }
+
+      // 2. Fetch User Role using PostResponse Model
+      final roleUrl = Uri.parse('${ApiConstants.baseURL}/master/dropdown?model=userrole&empno=$empNo');
+      final roleHttpRes = await http.get(roleUrl);
+
+      if (roleHttpRes.statusCode == 200) {
+        final roleData = PostResponse.fromJson(jsonDecode(roleHttpRes.body));
+
+        // 🛠️ FIXED: Added != null and ! to handle nullable lists safely
+        if (roleData.data != null && roleData.data!.isNotEmpty) {
+          _empRoleDesc = roleData.data!.first.key;
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load profile data: $e');
+    }
+
+    if (mounted) setState(() {});
+  }
+
+  // ── Logout Logic ──
+  Future<void> _handleLogout() async {
+    await LocalPrefs.saveLoginStatus(isLoggedIn: false);
+    await LocalPrefs.saveEmpCode(empCode: '');
+
+    try {
+      await AuthenticationService.logout(context);
+    } catch (e) {
+      debugPrint('Logout network error: $e');
+    }
+
+    if (!mounted) return;
+
+    // Push new root to clear app state safely without breaking navigator
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      '/',
+          (Route<dynamic> route) => false,
+    );
   }
 
   void _startAutoScroll() {
@@ -73,6 +151,7 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
+
   @override
   void dispose() {
     _autoScrollTimer?.cancel();
@@ -106,7 +185,6 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Tata Power logo
                     Flexible(
                       child: Image.asset(
                         'assets/images/tata_power_full_logo.png',
@@ -115,15 +193,98 @@ class _HomePageState extends State<HomePage> {
                         color: Colors.white,
                       ),
                     ),
-                    // User avatar (replaces "Holiday Homes" title)
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: const Color.fromRGBO(255, 255, 255, 0.25),
-                      backgroundImage: const AssetImage(
-                        'assets/images/user_login.jpg',
+
+                    // ── Profile Dropdown Menu ──
+                    PopupMenuButton<String>(
+                      offset: const Offset(0, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      onBackgroundImageError: (_, __) {},
-                      child: null,
+                      color: Colors.white,
+                      elevation: 6,
+                      onSelected: (String result) {
+                        if (result == 'logout') _handleLogout();
+                      },
+                      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                        // Profile Details Header (Non-clickable)
+                        PopupMenuItem<String>(
+                          enabled: false,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _empName ?? 'Loading Profile...',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'EMP ID: ${_empNo ?? ''}',
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                              if (_empRoleDesc != null) ...[
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    _empRoleDesc!,
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.blue.shade700
+                                    ),
+                                  ),
+                                ),
+                              ]
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        // Logout Button
+                        const PopupMenuItem<String>(
+                          value: 'logout',
+                          child: Row(
+                            children: [
+                              Icon(Icons.logout, color: Colors.redAccent, size: 22),
+                              SizedBox(width: 12),
+                              Text(
+                                'Sign Out',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      // ── Profile Image ──
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color.fromRGBO(255, 255, 255, 0.25),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _empNo == null
+                            ? Image.asset('assets/images/user_login.jpg', fit: BoxFit.cover)
+                            : Image.network(
+                          '${ApiConstants.empProfileURL}/$_empNo.jpg',
+                          fit: BoxFit.cover,
+                          // If the URL fails or returns 404, safely fallback to local asset!
+                          errorBuilder: (context, error, stackTrace) {
+                            return Image.asset('assets/images/user_login.jpg', fit: BoxFit.cover);
+                          },
+                        ),
+                      ),
                     ),
                   ],
                 )
@@ -135,6 +296,8 @@ class _HomePageState extends State<HomePage> {
             child: RefreshIndicator(
               color: const Color.fromRGBO(0, 100, 200, 0.75),
               onRefresh: () async {
+                // Refresh profile data when the user pulls down
+                await _loadUserProfile();
                 await Future.delayed(const Duration(seconds: 1));
               },
               child: SingleChildScrollView(
@@ -164,7 +327,7 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.10),
+                                    color: Colors.black.withValues(alpha: 0.10),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -175,13 +338,11 @@ class _HomePageState extends State<HomePage> {
                                 child: Stack(
                                   fit: StackFit.expand,
                                   children: [
-                                    // Background image
                                     Image.asset(
                                       item['image']!,
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Container(
-                                        color: const Color.fromRGBO(
-                                            200, 220, 255, 1),
+                                        color: const Color.fromRGBO(200, 220, 255, 1),
                                         child: const Icon(
                                           Icons.image_outlined,
                                           size: 48,
@@ -189,7 +350,6 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    // Gradient overlay
                                     Positioned.fill(
                                       child: DecoratedBox(
                                         decoration: BoxDecoration(
@@ -198,14 +358,13 @@ class _HomePageState extends State<HomePage> {
                                             end: Alignment.bottomCenter,
                                             colors: [
                                               Colors.transparent,
-                                              Colors.black.withOpacity(0.60),
+                                              Colors.black.withValues(alpha: 0.60),
                                             ],
                                             stops: const [0.40, 1.0],
                                           ),
                                         ),
                                       ),
                                     ),
-                                    // Location label
                                     Positioned(
                                       left: 16,
                                       bottom: 16,
@@ -236,7 +395,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // ── Dot Indicators ───────────────────────────────────────
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -258,7 +416,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 24),
 
-                    // ── Primary Action Buttons ───────────────────────────────
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
@@ -293,7 +450,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 28),
 
-                    // ── Quick Actions ────────────────────────────────────────
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 24),
                       child: Text(
@@ -327,8 +483,7 @@ class _HomePageState extends State<HomePage> {
                           ActionCardWide(
                             icon: Icons.print_outlined,
                             title: 'Print intimation',
-                            subtitle:
-                            'Get your booking Id intimation slip in pdf',
+                            subtitle: 'Get your booking Id intimation slip in pdf',
                             enabled: _isAllowed(Routes.printIntimation),
                             onTap: () => _navigateIfAllowed(Routes.printIntimation),
                           ),

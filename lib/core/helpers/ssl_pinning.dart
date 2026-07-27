@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:holidayhomes/custom/screens/error/rogue_cert_screen.dart';
 import 'package:http/io_client.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SSLSecurity {
   static const _channel = MethodChannel('com.tatapower.holidayhomes/security');

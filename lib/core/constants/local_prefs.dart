@@ -9,6 +9,9 @@ class LocalPrefs {
   static const _roleId = 'role_id';
   static const _isLoggedIn = 'is_logged_in';
 
+  // 🔑 THE FIX: Added a key for your Microsoft Token
+  static const _accessToken = 'access_token';
+
   // SETTERS
   static Future<void> saveEmployeeProfile({
     String? empName,
@@ -34,8 +37,6 @@ class LocalPrefs {
   }) async
   {
     final prefs = await SharedPreferences.getInstance();
-
-    // SETTER
     await prefs.setString(_empCode, empCode);
   }
 
@@ -55,6 +56,14 @@ class LocalPrefs {
     await prefs.setBool(_isLoggedIn, isLoggedIn);
   }
 
+  // 🔑 THE FIX: Added a setter to save the token when you log in
+  static Future<void> saveAccessToken({
+    required String token,
+  }) async
+  {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessToken, token);
+  }
 
   // GETTERS
   static Future<String?> getEmpCode() async {
@@ -80,6 +89,12 @@ class LocalPrefs {
   static Future<bool> getIsLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_isLoggedIn) ?? false;
+  }
+
+  // 🔑 THE FIX: Added a getter so api_client.dart can use it!
+  static Future<String?> getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_accessToken);
   }
 
   // Clear stored prefs

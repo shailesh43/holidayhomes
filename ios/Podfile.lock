@@ -21,8 +21,6 @@ PODS:
   - jailbreak_root_detection (1.0.1):
     - Flutter
     - IOSSecuritySuite (~> 1.9.10)
-  - printing (1.0.0):
-    - Flutter
 
 DEPENDENCIES:
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
@@ -30,7 +28,6 @@ DEPENDENCIES:
   - flutter_appauth (from `.symlinks/plugins/flutter_appauth/ios`)
   - http_certificate_pinning (from `.symlinks/plugins/http_certificate_pinning/ios`)
   - jailbreak_root_detection (from `.symlinks/plugins/jailbreak_root_detection/ios`)
-  - printing (from `.symlinks/plugins/printing/ios`)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
@@ -50,8 +47,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/http_certificate_pinning/ios"
   jailbreak_root_detection:
     :path: ".symlinks/plugins/jailbreak_root_detection/ios"
-  printing:
-    :path: ".symlinks/plugins/printing/ios"
 
 SPEC CHECKSUMS:
   Alamofire: f36a35757af4587d8e4f4bfa223ad10be2422b8c
@@ -63,7 +58,6 @@ SPEC CHECKSUMS:
   http_certificate_pinning: 133f28ad5c2d1ecda2581dd2d2cd9dc74da59012
   IOSSecuritySuite: b51056d5411aee567153ca86ce7f6edfdc5d2654
   jailbreak_root_detection: 9201e1dfd51dc23069cbfb8d4f4a2d18305170bf
-  printing: 54ff03f28fe9ba3aa93358afb80a8595a071dd07
 
 PODFILE CHECKSUM: 19593866b77e2ce3d47df39685cc929d95e180aa
 

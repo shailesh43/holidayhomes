@@ -1,201 +1,268 @@
-import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io'; // 🛠️ Required for HttpClient and X509Certificate
 import 'package:http/http.dart' as http;
-import 'package:logger/logger.dart';
-import 'package:dio/dio.dart';
+import 'package:http/io_client.dart';
 
 // REFERENCES
 import '../../core/constants/api_constants.dart';
+import 'package:holidayhomes/network/api_models/booking_id_response.dart';
+import 'package:holidayhomes/network/api_models/all_bookings_response.dart';
+import 'package:holidayhomes/network/api_models/guest_info_response.dart';
+import 'package:holidayhomes/network/api_models/edit_guest_info_response.dart';
+import 'package:holidayhomes/network/api_models/base_api_response.dart';
+import 'package:holidayhomes/network/api_models/location_response.dart' as loc_model;
+import 'package:holidayhomes/network/api_models/employee_response.dart' as emp_model;
+import 'package:holidayhomes/network/api_models/hddetails_response.dart';
+import 'package:holidayhomes/network/api_models/booking_data_response.dart';
+import 'package:holidayhomes/network/api_models/select_holiday_home.dart' as hh_model;
+import 'package:holidayhomes/network/api_models/suite_response.dart' as suite_model;
 
-// API MODELS
-import './api_models/all_bookings_response.dart';
-import './api_models/booking_id_response.dart';
-import './api_models/guest_info_response.dart';
-import './api_models/intimation_data.dart';
+// 🛠️ ADDED: Import for Availability Check
+import 'package:holidayhomes/network/api_models/hdmbookingcheckavail_response.dart';
+
+// Imports for BookingsPage tabs
+import 'package:holidayhomes/network/api_models/my_bookings_response.dart';
+import 'package:holidayhomes/network/api_models/facilitator_booking_response.dart';
+
+// Imports for Cancellation flow
+import 'package:holidayhomes/network/api_models/status_message_response.dart';
+import 'package:holidayhomes/network/api_models/booking_result_response.dart';
+
+// 🛠️ ADDED: Import for 30 Days API
+import 'package:holidayhomes/network/api_models/hdhmbookingdetailsNext30days_response.dart';
 
 class ApiClient {
-  // Static pinned client — shared across ALL instances
   static http.Client? _pinnedClient;
-  // static bool _isPinningVerified = false; // static so all instances share it
 
-  final Logger logger = Logger();
-  // Called ONCE from main() before app loads
-  // Future<void> initSSLPinning() async {
-  //   if (_isPinningVerified) return; // already done, skip
-  //   _pinnedClient = await _buildPinnedClient();
-  //   _isPinningVerified = true;
-  //   logger.d("SSL Pinning initialized");
-  // }
-
-  // Builds the pinned HTTP client from your .pem cert
-  // static Future<http.Client> _buildPinnedClient() async {
-  //   final sslCert = await rootBundle.load('assets/docs/bizapps-cert.pem');
-  //   final securityContext = SecurityContext();
-  //   securityContext.setTrustedCertificatesBytes(sslCert.buffer.asInt8List());
-  //
-  //   final httpClient = HttpClient(context: securityContext);
-  //   httpClient.badCertificateCallback = (X509Certificate cert, String host, int port) {
-  //     return host == "bizapps.tatapower.com"; // only allow your domain
-  //   };
-  //
-  //   return IOClient(httpClient);
-  // }
-  // // Returns the pinned client — used by ALL request methods
   http.Client get _client {
-    // _assertPinningVerified();
-    return _pinnedClient ?? http.Client();
-  }
-
-  void _assertPinningVerified() {
-    // if (!_isPinningVerified || _pinnedClient == null) {
-    if(_pinnedClient == null){
-      throw Exception("SSL Pinning not initialized. Call initSSLPinning() first.");
+    if (_pinnedClient != null) {
+      return _pinnedClient!;
     }
+
+    final HttpClient httpClient = HttpClient()
+      ..badCertificateCallback = ((X509Certificate cert, String host, int port) => true);
+
+    return IOClient(httpClient);
   }
 
-  // ---------------- GET ----------------
-  Future<Map<String, dynamic>> get(String endpoint) async {
-    // _assertPinningVerified();
-    final url = Uri.parse('${ApiConstants.baseURL}$endpoint');
-    final response = await _client.get(url, headers: _defaultHeaders());
-    return _handleResponse(response, 'GET');
-  }
-
-  // ---------------- POST ----------------
-  Future<Map<String, dynamic>> post(String endpoint, {
-    required Map<String, dynamic> body,
-    required Map<String, String>? headers,
-  }) async
-  {
-    // _assertPinningVerified();
-    final url = Uri.parse('${ApiConstants.baseURL}$endpoint');
-    final response = await _client.post(
-      url,
-      headers: headers ?? _defaultHeaders(),
-      body: jsonEncode(body),
-    );
-    return _handleResponse(response, 'POST');
-  }
-
-  // ---------------- COMMON HEADERS ----------------
-  Map<String, String> _defaultHeaders() {
+  Future<Map<String, String>> _defaultHeaders() async {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'User-Agent': 'Mozilla/5.0 (Android; Mobile) AppleWebKit/537.36',
     };
   }
 
-  // ---------------- RESPONSE HANDLER ----------------
   dynamic _handleResponse(http.Response response, String method) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(response.body);
     }
-
-    throw Exception(
-      'API Error [${response.statusCode}]: ${response.body}',
-    );
+    throw Exception('API Error [${response.statusCode}]: ${response.body}');
   }
 
-  // ---------------- API ENDPOINTS ----------------
-  //  1. /PayRollData
-  Future<FilteredBookingsResponse> getStatusFilteredRequests({
-    required String fromDate,
-    required String toDate,
-  }) async
-  {
-    // _assertPinningVerified();
-
-    final endpointUrl =
-    await ApiConstants.getEndPointUrl('fetchReportSubmit');
-
-    final url = Uri.parse(endpointUrl);
-
-    final body = {
-      'hdHomeBookingFromdt': fromDate,
-      'hdHomeBookingTodt': toDate,
-    };
-
+  Future<FilteredBookingsResponse> getStatusFilteredRequests({required String fromDate, required String toDate}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('fetchReportSubmit');
     final response = await _client.post(
-      url,
-      headers: _defaultHeaders(),
-      body: jsonEncode(body),
+        Uri.parse(endpointUrl),
+        headers: await _defaultHeaders(),
+        body: jsonEncode({'hdHomeBookingFromdt': fromDate, 'hdHomeBookingTodt': toDate})
     );
-
-    logger.d('${response.statusCode} > URL: $url');
-
-    final data = _handleResponse(response, 'POST');
-    print("TYPE: ${data.runtimeType}");
-    print("DATA: $data");
-    return FilteredBookingsResponse.fromJson(data);
+    return FilteredBookingsResponse.fromJson(_handleResponse(response, 'POST'));
   }
 
-  // https://bizappsd.tatapower.com/dev/api/holiday-homes/hdhomes/api/master/search?model=findbooking&bookingID=3300
-  Future<BookingIdResponse> findBookingById({
-    required String bookingId,
-  }) async {
+  Future<GuestInfoResponse> getGuestsInfo({required String bookingId}) async {
     final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
-
-    final url = Uri.parse(
-      '$endpointUrl?model=findbooking&bookingId=$bookingId',
-    );
-
     final response = await _client.get(
-      url,
-      headers: _defaultHeaders(),
-    );
-
-    logger.d('${response.statusCode} > URL: $url');
-
-    final data = _handleResponse(response, 'POST');
-    print("TYPE: ${data.runtimeType}");
-    print("DATA: $data");
-    return BookingIdResponse.fromJson(data);
+        Uri.parse('$endpointUrl?model=mybookinginfo&transno=$bookingId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+    return GuestInfoResponse.fromJson(_handleResponse(response, 'GET'));
   }
 
-  // https://bizappsd.tatapower.com/dev/api/holiday-homes/hdhomes/api/master/search?model=mybookinginfo&transno=3300
-  Future<GuestInfoResponse> getGuestsInfo({
-    required String bookingId,
-  }) async {
-    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
-
-    final url = Uri.parse(
-      '$endpointUrl?model=mybookinginfo&transno=$bookingId',
-    );
-
+  Future<EditGuestInfoResponse> getEditGuestInfo({required String bookingId}) async {
     final response = await _client.get(
-      url,
-      headers: _defaultHeaders(),
-    );
-
-    logger.d('${response.statusCode} > URL: $url');
-
-    final data = _handleResponse(response, 'POST');
-    print("TYPE: ${data.runtimeType}");
-    print("DATA: $data");
-    return GuestInfoResponse.fromJson(data);
+        Uri.parse('${ApiConstants.baseURL}/hdhm/guests/$bookingId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+    return EditGuestInfoResponse.fromJson(_handleResponse(response, 'GET'));
   }
 
-  /// Single Future that calls both endpoints together and returns a combined
-  /// result — this is what the PrintIntimation screen should call.
-  Future<IntimationData> getIntimationData({
-    required String bookingId,
-  }) async {
-    final results = await Future.wait([
-      findBookingById(bookingId: bookingId),
-      getGuestsInfo(bookingId: bookingId),
-    ]);
-
-    final bookingResponse = results[0] as BookingIdResponse;
-    final guestResponse = results[1] as GuestInfoResponse;
-
-    if (!bookingResponse.success || bookingResponse.data.isEmpty) {
-      throw Exception('No booking found for Booking Id: $bookingId');
+  Future<loc_model.LocationResponse> getLocations() async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('fetchLocations');
+    final response = await _client.get(Uri.parse(endpointUrl));
+    final data = _handleResponse(response, 'GET');
+    if (data is List) {
+      return loc_model.LocationResponse(
+          success: true,
+          data: data.map((v) => loc_model.LocationData.fromJson(v)).toList()
+      );
     }
+    return loc_model.LocationResponse.fromJson(data);
+  }
 
-    return IntimationData(
-      booking: bookingResponse.data.first,
-      guests: guestResponse.success ? guestResponse.data : [],
+  Future<loc_model.LocationResponse> getHolidayHomesByLocation(int locationId) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('holidayHomeMaster');
+    final response = await _client.get(
+        Uri.parse(endpointUrl),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+
+    final hhResponse = hh_model.SelectHolidayHomeResponse.fromJson(_handleResponse(response, 'GET'));
+    if (hhResponse.data != null) {
+      return loc_model.LocationResponse(
+          success: true,
+          data: hhResponse.data!.map((e) => loc_model.LocationData(key: e.hdHomeCd, val: e.hdHomeName)).toList()
+      );
+    }
+    return loc_model.LocationResponse(success: false, data: []);
+  }
+
+  Future<loc_model.LocationResponse> getSuitesByHolidayHome(int hhId) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('dropdownModel');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?model=suitebasedonhdhome&hdhomeid=$hhId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+
+    final suiteResponse = suite_model.SuiteResponse.fromJson(_handleResponse(response, 'GET'));
+    if (suiteResponse.data != null) {
+      return loc_model.LocationResponse(
+          success: true,
+          data: suiteResponse.data!.map((e) => loc_model.LocationData(key: e.hdHomeSuiteCd, val: e.hdHomeSuiteName)).toList()
+      );
+    }
+    return loc_model.LocationResponse(success: false, data: []);
+  }
+
+  Future<HdDetailsResponse> getHolidayHomeDetails({required int hhId}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('fetchPropertyDetails');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?hdHomeCd=$hhId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+    return HdDetailsResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  Future<emp_model.EmployeeResponse> verifyEmployee({required String empId}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('fetchEmployee');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?EmpNo=$empId'),
+        headers: await _defaultHeaders()
     );
+    return emp_model.EmployeeResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  Future<BookingDataResponse> findBookingById({required String bookingId}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?model=findbooking&bookingId=$bookingId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+
+    final responseData = jsonDecode(response.body);
+    if (responseData['success'] == true) {
+      if (responseData['data'] is Map) {
+        return BookingDataResponse(
+            success: true,
+            data: [BookingData.fromJson(responseData['data'])]
+        );
+      }
+      return BookingDataResponse.fromJson(responseData);
+    }
+    throw Exception('API returned success: false');
+  }
+
+  Future<BookingDataResponse> submitCancelBooking({required String bookingId}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('cancelBooking');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl&bookingId=$bookingId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+    return BookingDataResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  Future<bool> saveGuestDetails({required String bookingId, required List<Map<String, dynamic>> guests}) async {
+    final response = await _client.post(
+        Uri.parse('${ApiConstants.baseURL}/hdhm/guests/update'),
+        headers: await _defaultHeaders(),
+        body: jsonEncode({'bookingId': bookingId, 'guests': guests})
+    ).timeout(const Duration(seconds: 30));
+
+    if (response.statusCode >= 200 && response.statusCode < 300) return true;
+    throw Exception('Server returned ${response.statusCode}');
+  }
+
+  Future<MyBookingsResponse> getMyBookings({required String empNo}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?model=mybooking&empno=$empNo'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 10));
+    return MyBookingsResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  Future<FacilitatorBookingResponse> getFacilitatorBookings({required String empNo}) async {
+    final endpointUrl = await ApiConstants.getEndPointUrl('searchModel');
+    final response = await _client.get(
+        Uri.parse('$endpointUrl?model=mybookingother&empno=$empNo'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 10));
+    return FacilitatorBookingResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  Future<StatusMessageResponse> sendCancellationMail({required String bookingId, required String reason}) async {
+    final response = await _client.post(
+        Uri.parse('${ApiConstants.baseURL}/sendMail'),
+        headers: await _defaultHeaders(),
+        body: jsonEncode({'bookingId': bookingId, 'reason': reason})
+    ).timeout(const Duration(seconds: 30));
+    return StatusMessageResponse.fromJson(_handleResponse(response, 'POST'));
+  }
+
+  Future<BookingResultResponse> submitCancelBookingWithReason({required String bookingId, required String reason}) async {
+    final response = await _client.post(
+        Uri.parse('${ApiConstants.baseURL}/hdhmbookingcancel'),
+        headers: await _defaultHeaders(),
+        body: jsonEncode({'bookingId': bookingId, 'reason': reason})
+    ).timeout(const Duration(seconds: 30));
+    return BookingResultResponse.fromJson(_handleResponse(response, 'POST'));
+  }
+
+  Future<Map<String, dynamic>?> getPropertyCardDetailsByLocId(int locId) async {
+    final response = await _client.get(
+        Uri.parse('${ApiConstants.baseURL}/master/search?model=hddetails&locid=$locId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+
+    final data = _handleResponse(response, 'GET');
+    if (data['success'] == true && data['data'] != null) {
+      List dataList = data['data'] is List ? data['data'] : [data['data']];
+      if (dataList.isNotEmpty) return dataList.first as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<HdhmbookingdetailsNext30daysResponse> getBookingRulesNext30Days(int hhId) async {
+    final response = await _client.get(
+        Uri.parse('${ApiConstants.baseURL}/master/search?model=hdhmbookingdetailsNext30days&hdhomeid=$hhId'),
+        headers: await _defaultHeaders()
+    ).timeout(const Duration(seconds: 30));
+    return HdhmbookingdetailsNext30daysResponse.fromJson(_handleResponse(response, 'GET'));
+  }
+
+  // ── 🛠️ FIXED: Proper GET Request to Fetch Booked Dates! ──
+  Future<HdmbookingcheckavailResponse> getBookedDatesForSuite(int suiteId) async {
+    final url = Uri.parse('${ApiConstants.baseURL}/master/search?model=hdhmbookingcheckavail&suiteid=$suiteId');
+    print('🚀 FETCHING BOOKED DATES: $url');
+    try {
+      final response = await _client.get(
+          url,
+          headers: await _defaultHeaders()
+      ).timeout(const Duration(seconds: 30));
+      return HdmbookingcheckavailResponse.fromJson(_handleResponse(response, 'GET'));
+    } catch (e) {
+      throw Exception('Failed to fetch availability: $e');
+    }
   }
 }
